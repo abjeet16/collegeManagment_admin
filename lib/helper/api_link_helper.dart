@@ -1,5 +1,5 @@
 class ApiLinkHelper {
-  static const String BASE_URL = "https://collegemanagment-springboot-production.up.railway.app/api/v1/";
+  static const String BASE_URL = "https://abjeet.up.railway.app/api/v1/";
 
   static String loginUserApiUri() {
     return "${BASE_URL}auth/user/login";

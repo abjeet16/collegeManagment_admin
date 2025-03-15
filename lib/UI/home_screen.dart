@@ -56,13 +56,13 @@ class _HomeScreenState extends State<HomeScreen> {
           content: Text("Are you sure you want to log out?"),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(), // Cancel
+              onPressed: () => Navigator.of(context).pop(),
               child: Text("Cancel"),
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close dialog
-                _logout(); // Proceed with logout
+                Navigator.of(context).pop();
+                _logout();
               },
               child: Text("Logout", style: TextStyle(color: Colors.red)),
             ),
@@ -138,7 +138,32 @@ class _HomeScreenState extends State<HomeScreen> {
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          Center(child: Text("Home Screen")),
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    // Navigate to user functions screen
+                  },
+                  child: Text("Users"),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: Size(150, 50), // Button size
+                  ),
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    // Navigate to course functions screen
+                  },
+                  child: Text("Courses"),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: Size(150, 50), // Button size
+                  ),
+                ),
+              ],
+            ),
+          ),
           ProfileScreen(),
           Center(child: Text("Settings Screen")),
         ],
@@ -146,5 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
+
 
 
