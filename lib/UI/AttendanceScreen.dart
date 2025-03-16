@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 import '../helper/api_service.dart';
 import '../modules/StudentsSubjectAttendance.dart';
 import '../modules/class_entity.dart';
@@ -21,9 +22,11 @@ class AttendanceScreen extends StatefulWidget {
 
 class _AttendanceScreenState extends State<AttendanceScreen> {
   List<StudentsSubjectAttendance>? attendanceRecords;
+  List<StudentsSubjectAttendance>? filteredRecords;
   bool isLoading = true;
-  int? modifiedIndex; // Track the currently modified index
-  Map<int, bool> originalStatus = {}; // Store original attendance status
+  int? modifiedIndex;
+  Map<int, bool> originalStatus = {};
+  DateTime? selectedDate; // Stores the selected date for filtering
 
   @override
   void initState() {
@@ -38,6 +41,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       await ApiService.getStudentAttendance(token, widget.studentId, widget.subjectId);
       setState(() {
         attendanceRecords = fetchedData;
+        filteredRecords = fetchedData; // Initialize filtered records with all data
         isLoading = false;
       });
     }
@@ -45,17 +49,17 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
   Future<String?> _getToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString("auth_token"); // Replace with actual token retrieval logic
+    return prefs.getString("auth_token");
   }
 
   void _togglePresentStatus(int index) {
-    if (modifiedIndex != null && modifiedIndex != index) return; // Only allow one change at a time
+    if (modifiedIndex != null && modifiedIndex != index) return;
 
     setState(() {
       if (modifiedIndex == null) {
-        originalStatus[index] = attendanceRecords![index].present; // Store the original state
+        originalStatus[index] = filteredRecords![index].present;
       }
-      attendanceRecords![index].present = !attendanceRecords![index].present;
+      filteredRecords![index].present = !filteredRecords![index].present;
       modifiedIndex = index;
     });
   }
@@ -63,7 +67,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   Future<void> _saveChanges(int index) async {
     String? token = await _getToken();
     if (token != null) {
-      final record = attendanceRecords![index];
+      final record = filteredRecords![index];
       bool success = await ApiService.updateAttendance(
         token,
         widget.studentId,
@@ -74,8 +78,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
       if (success) {
         setState(() {
-          modifiedIndex = null; // Reset edit state
-          originalStatus.remove(index); // Remove original state after save
+          modifiedIndex = null;
+          originalStatus.remove(index);
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Attendance updated successfully!")),
@@ -91,24 +95,71 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   void _cancelEdit() {
     if (modifiedIndex != null && originalStatus.containsKey(modifiedIndex)) {
       setState(() {
-        attendanceRecords![modifiedIndex!].present = originalStatus[modifiedIndex]!; // Revert to original
+        filteredRecords![modifiedIndex!].present = originalStatus[modifiedIndex!]!;
         modifiedIndex = null;
       });
     }
   }
 
+  Future<void> _selectDate(BuildContext context) async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2023),
+      lastDate: DateTime(2030),
+    );
+
+    if (picked != null) {
+      setState(() {
+        selectedDate = picked;
+        _filterRecordsByDate();
+      });
+    }
+  }
+
+  void _filterRecordsByDate() {
+    if (selectedDate == null) return;
+
+    String formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate!);
+    setState(() {
+      filteredRecords = attendanceRecords!
+          .where((record) => record.attendanceDate == formattedDate)
+          .toList();
+    });
+  }
+
+  void _clearFilter() {
+    setState(() {
+      selectedDate = null;
+      filteredRecords = List.from(attendanceRecords!); // Reset to original data
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Attendance")),
+      appBar: AppBar(
+        title: Text("Attendance"),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.date_range),
+            onPressed: () => _selectDate(context),
+          ),
+          if (selectedDate != null)
+            IconButton(
+              icon: Icon(Icons.clear),
+              onPressed: _clearFilter,
+            ),
+        ],
+      ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
-          : attendanceRecords == null || attendanceRecords!.isEmpty
+          : filteredRecords == null || filteredRecords!.isEmpty
           ? Center(child: Text("No attendance records found"))
           : ListView.builder(
-        itemCount: attendanceRecords!.length,
+        itemCount: filteredRecords!.length,
         itemBuilder: (context, index) {
-          final record = attendanceRecords![index];
+          final record = filteredRecords![index];
           bool isCurrentEditing = index == modifiedIndex;
 
           return Card(
@@ -159,4 +210,5 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     );
   }
 }
+
 
