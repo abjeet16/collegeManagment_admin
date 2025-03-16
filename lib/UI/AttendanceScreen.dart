@@ -23,6 +23,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   List<StudentsSubjectAttendance>? attendanceRecords;
   bool isLoading = true;
   int? modifiedIndex; // Track the currently modified index
+  Map<int, bool> originalStatus = {}; // Store original attendance status
 
   @override
   void initState() {
@@ -51,6 +52,9 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     if (modifiedIndex != null && modifiedIndex != index) return; // Only allow one change at a time
 
     setState(() {
+      if (modifiedIndex == null) {
+        originalStatus[index] = attendanceRecords![index].present; // Store the original state
+      }
       attendanceRecords![index].present = !attendanceRecords![index].present;
       modifiedIndex = index;
     });
@@ -71,6 +75,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       if (success) {
         setState(() {
           modifiedIndex = null; // Reset edit state
+          originalStatus.remove(index); // Remove original state after save
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Attendance updated successfully!")),
@@ -84,9 +89,12 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   }
 
   void _cancelEdit() {
-    setState(() {
-      modifiedIndex = null;
-    });
+    if (modifiedIndex != null && originalStatus.containsKey(modifiedIndex)) {
+      setState(() {
+        attendanceRecords![modifiedIndex!].present = originalStatus[modifiedIndex]!; // Revert to original
+        modifiedIndex = null;
+      });
+    }
   }
 
   @override
