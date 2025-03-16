@@ -20,4 +20,16 @@ class ApiLinkHelper {
   static String markAttendanceApiUri() {
     return "${BASE_URL}teacher/mark_attendance";
   }
+
+  static String viewCoursesApiUri(){
+    return "${BASE_URL}Admin/courses";
+  }
+
+  static String addCourseApiUri() {
+    return "${BASE_URL}Admin/add_course";
+  }
+
+  static deleteCourseApiUri(int courseId, String password) {
+    return "${BASE_URL}Admin/deleteCourse/$courseId?password=$password";
+  }
 }

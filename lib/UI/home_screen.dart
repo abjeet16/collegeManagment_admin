@@ -4,6 +4,8 @@ import '../helper/api_service.dart';
 import '../modules/user_profile.dart';
 import 'ProfileScreen.dart';
 import 'login_screen.dart';
+import 'UsersScreen.dart';  // Import Users Screen
+import 'CoursesScreen.dart'; // Import Courses Screen
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -144,7 +146,10 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    // Navigate to user functions screen
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => UsersScreen()),
+                    );
                   },
                   child: Text("Users"),
                   style: ElevatedButton.styleFrom(
@@ -154,7 +159,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {
-                    // Navigate to course functions screen
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => CoursesScreen()),
+                    );
                   },
                   child: Text("Courses"),
                   style: ElevatedButton.styleFrom(
@@ -171,6 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
 
 
 
