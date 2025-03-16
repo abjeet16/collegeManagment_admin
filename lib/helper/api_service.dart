@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'package:attendence_admin_fultter/modules/user_profile.dart';
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
+import 'package:oktoast/oktoast.dart';
 import '../helper/api_link_helper.dart';
 import '../modules/UserLoginRequest.dart';
 import '../modules/UserLoginResponse.dart';
@@ -120,7 +123,7 @@ class ApiService {
 
   static Future<bool> deleteCourse(String token, int courseId, String password) async {
     try {
-      final uri = Uri.parse(ApiLinkHelper.deleteCourseApiUri(courseId,password));
+      final uri = Uri.parse(ApiLinkHelper.deleteCourseApiUri(courseId, password));
 
       final response = await http.delete(
         uri,
@@ -134,13 +137,23 @@ class ApiService {
       print("deleteCourse Response body: ${response.body}");
 
       if (response.statusCode == 200) {
-        return true; // Course deleted successfully
-      } else {
-        print("deleteCourse failed: ${response.statusCode}");
+        showToast("✅ Course deleted successfully", position: ToastPosition.bottom);
+        return true;
+      }
+
+      // ❌ Handle incorrect password (custom error)
+      if (response.statusCode == 401 && response.body.contains("Invalid password")) {
+        showToast("❌ Incorrect password. Try again!", position: ToastPosition.bottom, backgroundColor: Colors.red);
         return false;
       }
+
+      // ❌ Handle general failure (API error)
+      showToast("❌ Failed to delete course: ${response.body}", position: ToastPosition.bottom, backgroundColor: Colors.red);
+      return false;
+
     } catch (e) {
       print("Error in deleteCourse: $e");
+      showToast("❌ Error: Something went wrong!", position: ToastPosition.bottom, backgroundColor: Colors.red);
       return false;
     }
   }
