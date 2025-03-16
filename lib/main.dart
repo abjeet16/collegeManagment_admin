@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:oktoast/oktoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'UI/home_screen.dart';
 import 'UI/login_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(MyApp());
+  runApp(
+    OKToast( // ✅ Wrap the entire app with OKToast
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -14,7 +18,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: SplashScreen(), // Start with SplashScreen to check login status
+      home: SplashScreen(), // ✅ Start with SplashScreen
     );
   }
 }
@@ -35,7 +39,7 @@ class _SplashScreenState extends State<SplashScreen> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final token = prefs.getString("auth_token");
 
-    await Future.delayed(Duration(seconds: 2)); // Optional delay for splash effect
+    await Future.delayed(Duration(seconds: 2)); // ✅ Splash effect delay
 
     if (token != null && token.isNotEmpty) {
       Navigator.pushReplacement(
@@ -54,7 +58,7 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: CircularProgressIndicator(), // Show loading while checking token
+        child: CircularProgressIndicator(), // ✅ Loading indicator
       ),
     );
   }
