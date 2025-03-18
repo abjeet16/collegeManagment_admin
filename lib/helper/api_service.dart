@@ -7,6 +7,7 @@ import '../modules/AttendanceUpdateRequest.dart';
 import '../modules/StudentDetails.dart';
 import '../modules/StudentsSubjectAttendance.dart';
 import '../modules/SubjectDTO.dart';
+import '../modules/TeacherDetailResponse.dart';
 import '../modules/UserLoginRequest.dart';
 import '../modules/UserLoginResponse.dart';
 import '../modules/course.dart';
@@ -194,9 +195,6 @@ class ApiService {
         },
       );
 
-      print("getAllSubjects Response status: ${response.statusCode}");
-      print("getAllSubjects Response body: ${response.body}");
-
       if (response.statusCode == 200) {
         List<dynamic> data = jsonDecode(response.body);
         return data.map((json) => SubjectDTO.fromJson(json)).toList();
@@ -313,6 +311,107 @@ class ApiService {
     } catch (e) {
       print("Error updating attendance: $e");
       return false;
+    }
+  }
+
+  static Future<bool> addClass(
+      String token, String course, int batchYear, String section) async {
+    try {
+      final response = await http.post(
+        Uri.parse(ApiLinkHelper.AddClassUri()), // Replace with actual API endpoint
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({
+          "course": course,
+          "batchYear": batchYear,
+          "section": section
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print("Class added successfully.");
+        return true;
+      } else {
+        print("Failed to add class: ${response.statusCode}");
+        return false;
+      }
+    } catch (e) {
+      print("Error adding class: $e");
+      return false;
+    }
+  }
+
+  static Future<bool> addSubject(
+      String token, String subjectId, String subjectName, String courseName) async {
+    try {
+      final response = await http.post(
+        Uri.parse(ApiLinkHelper.AddSubjectUri()), // API Endpoint
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({
+          "subjectId": subjectId,
+          "subjectName": subjectName,
+          "course": courseName // ✅ Sending courseId instead of course name
+        }),
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error adding subject: $e");
+      return false;
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>?> getAllTeachers(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse(ApiLinkHelper.GetAllTeachersUri()), // API Endpoint
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+      } else {
+        print("Failed to fetch teachers: ${response.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      print("Error fetching teachers: $e");
+      return null;
+    }
+  }
+
+  // Fetch teacher details by teacherId
+  static Future<TeacherDetailResponse?> getTeacherDetails(String token, String teacherId) async {
+    try {
+      final response = await http.get(
+        Uri.parse(ApiLinkHelper.getTeacherDetailsApiUri(teacherId)), // API Endpoint
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      print("getTeacherDetails Response status: ${response.statusCode}");
+      print("getTeacherDetails Response body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return TeacherDetailResponse.fromJson(data);
+      } else {
+        print("getTeacherDetails failed: ${response.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      print("Error in getTeacherDetails: $e");
+      return null;
     }
   }
 }

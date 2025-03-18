@@ -3,12 +3,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../helper/api_service.dart';
 import '../modules/course.dart';
 import '../modules/class_entity.dart';
-import 'students_screen.dart';// Import StudentsScreen
+import 'students_screen.dart';
 
 class ClassesScreen extends StatefulWidget {
   final Course course;
+  final bool fromAssignTeacher;
 
-  ClassesScreen({required this.course});
+  ClassesScreen({required this.course,required this.fromAssignTeacher});
 
   @override
   _ClassesScreenState createState() => _ClassesScreenState();
@@ -47,6 +48,66 @@ class _ClassesScreenState extends State<ClassesScreen> {
   Future<String?> _getToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString("auth_token");
+  }
+
+  void _showAddClassDialog() {
+    TextEditingController batchYearController = TextEditingController();
+    TextEditingController sectionController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Add New Class"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text("Course: ${widget.course.courseName}",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 10),
+              TextField(
+                controller: batchYearController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(labelText: "Batch Year"),
+              ),
+              TextField(
+                controller: sectionController,
+                decoration: InputDecoration(labelText: "Section"),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context), // Close dialog
+              child: Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                String? token = await _getToken();
+                if (token != null) {
+                  bool success = await ApiService.addClass(
+                    token,
+                    widget.course.courseName, // Use the course name
+                    int.tryParse(batchYearController.text) ?? 0,
+                    sectionController.text,
+                  );
+
+                  if (success) {
+                    Navigator.pop(context); // Close dialog on success
+                    _fetchClasses(); // Refresh the list
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Failed to add class")),
+                    );
+                  }
+                }
+              },
+              child: Text("Add Class"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -88,6 +149,11 @@ class _ClassesScreenState extends State<ClassesScreen> {
             );
           },
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddClassDialog,
+        child: Icon(Icons.add),
+        backgroundColor: Colors.blue,
       ),
     );
   }

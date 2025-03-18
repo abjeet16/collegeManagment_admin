@@ -5,8 +5,9 @@ import 'subjects_screen.dart';
 
 class CourseOptionsScreen extends StatelessWidget {
   final Course course;
+  final bool fromAssignTeacher;
 
-  CourseOptionsScreen({required this.course});
+  CourseOptionsScreen({required this.course,required this.fromAssignTeacher});
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +35,7 @@ class CourseOptionsScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ClassesScreen(course: course),
+                    builder: (context) => ClassesScreen(course: course,fromAssignTeacher: false,),
                   ),
                 );
               },
@@ -51,7 +52,7 @@ class CourseOptionsScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => SubjectsScreen(course: course, classId: -1,),
+                    builder: (context) => SubjectsScreen(course: course),
                   ),
                 );
               },

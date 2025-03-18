@@ -56,4 +56,20 @@ class ApiLinkHelper {
   static String UpdateAttendanceUri() {
     return"${BASE_URL}Admin/updateAttendance";
   }
+
+  static String AddClassUri(){
+    return "${BASE_URL}Admin/add_class";
+  }
+
+  static String AddSubjectUri(){
+    return "${BASE_URL}Admin/add_subject";
+  }
+
+  static String GetAllTeachersUri(){
+    return "${BASE_URL}Admin/Teachers";
+  }
+
+  static String getTeacherDetailsApiUri(String teacherId){
+    return "${BASE_URL}Admin/Teacher/$teacherId/details";
+  }
 }

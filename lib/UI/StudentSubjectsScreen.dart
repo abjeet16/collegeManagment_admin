@@ -67,6 +67,10 @@ class _StudentSubjectsScreenState extends State<StudentSubjectsScreen> {
           : ListView.builder(
         itemCount: subjects.length,
         itemBuilder: (context, index) {
+          // Check if assignedTeacher is null or empty
+          bool isTeacherAssigned = subjects[index].assignedTeacher != null &&
+              subjects[index].assignedTeacher!.isNotEmpty;
+
           return GestureDetector(
             onTap: () {
               Navigator.push(
@@ -83,9 +87,26 @@ class _StudentSubjectsScreenState extends State<StudentSubjectsScreen> {
             child: Card(
               margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
               child: ListTile(
-                title: Text(subjects[index].subjectName,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                subtitle: Text("Code: ${subjects[index].subjectCode}"),
+                title: Text(
+                  subjects[index].subjectName,
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Code: ${subjects[index].subjectCode}"),
+                    Text(
+                      isTeacherAssigned
+                          ? "Assigned Teacher: ${subjects[index].assignedTeacher}"
+                          : "No Teacher ASSIGNED",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: isTeacherAssigned ? Colors.black : Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
                 trailing: Icon(Icons.arrow_forward_ios),
               ),
             ),
@@ -95,3 +116,4 @@ class _StudentSubjectsScreenState extends State<StudentSubjectsScreen> {
     );
   }
 }
+

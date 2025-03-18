@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../helper/api_service.dart';
 import '../modules/SubjectDTO.dart';
 import '../modules/course.dart';
 
 class SubjectsScreen extends StatefulWidget {
-  final Course course; // ✅ Only courseId is needed
+  final Course course; // ✅ Course contains courseId
 
-  SubjectsScreen({required this.course, required int classId});
+  SubjectsScreen({required this.course});
 
   @override
   _SubjectsScreenState createState() => _SubjectsScreenState();
@@ -31,7 +30,8 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
 
     String? token = await _getToken();
     if (token != null) {
-      List<SubjectDTO>? fetchedSubjects = await ApiService.getAllSubjects(token, widget.course.id);
+      List<SubjectDTO>? fetchedSubjects =
+      await ApiService.getAllSubjects(token, widget.course.id);
       if (fetchedSubjects != null) {
         setState(() {
           subjects = fetchedSubjects;
@@ -47,6 +47,65 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
   Future<String?> _getToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString("auth_token");
+  }
+
+  void _showAddSubjectDialog() {
+    TextEditingController subjectIdController = TextEditingController();
+    TextEditingController subjectNameController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Add New Subject"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text("Course: ${widget.course.courseName}",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 10),
+              TextField(
+                controller: subjectIdController,
+                decoration: InputDecoration(labelText: "Subject ID"),
+              ),
+              TextField(
+                controller: subjectNameController,
+                decoration: InputDecoration(labelText: "Subject Name"),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context), // Close dialog
+              child: Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                String? token = await _getToken();
+                if (token != null) {
+                  bool success = await ApiService.addSubject(
+                    token,
+                    subjectIdController.text,
+                    subjectNameController.text,
+                    widget.course.courseName, // ✅ Pass courseId instead of course name
+                  );
+
+                  if (success) {
+                    Navigator.pop(context); // Close dialog on success
+                    _fetchSubjects(); // Refresh the list
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Failed to add subject")),
+                    );
+                  }
+                }
+              },
+              child: Text("Add Subject"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -76,6 +135,11 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
             return SubjectCard(subject: subjects[index]);
           },
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddSubjectDialog,
+        child: Icon(Icons.add),
+        backgroundColor: Colors.blue,
       ),
     );
   }
@@ -112,3 +176,5 @@ class SubjectCard extends StatelessWidget {
     );
   }
 }
+
+

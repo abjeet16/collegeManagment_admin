@@ -172,8 +172,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Date: ${record.attendanceDate}", style: TextStyle(fontSize: 16)),
-                      Text("Period: ${record.schedulePeriod}", style: TextStyle(fontSize: 14, color: Colors.grey)),
+                      // 🎯 **Formatted Date Display**
+                      Text(
+                        "Date: ${DateFormat('dd / MM / yyyy').format(DateTime.parse(record.attendanceDate))}",
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      Text("Period: ${record.schedulePeriod}",
+                          style: TextStyle(fontSize: 14, color: Colors.grey)),
                     ],
                   ),
                   Row(
@@ -210,5 +215,6 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     );
   }
 }
+
 
 
