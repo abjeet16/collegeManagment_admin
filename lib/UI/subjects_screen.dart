@@ -5,9 +5,10 @@ import '../modules/SubjectDTO.dart';
 import '../modules/course.dart';
 
 class SubjectsScreen extends StatefulWidget {
-  final Course course; // ✅ Course contains courseId
+  final Course course;
+  final int classId;
 
-  SubjectsScreen({required this.course});
+  SubjectsScreen({required this.course,required this.classId});
 
   @override
   _SubjectsScreenState createState() => _SubjectsScreenState();
@@ -31,7 +32,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
     String? token = await _getToken();
     if (token != null) {
       List<SubjectDTO>? fetchedSubjects =
-      await ApiService.getAllSubjects(token, widget.course.id);
+      await ApiService.getAllSubjects(token, widget.course.id,widget.classId);
       if (fetchedSubjects != null) {
         setState(() {
           subjects = fetchedSubjects;

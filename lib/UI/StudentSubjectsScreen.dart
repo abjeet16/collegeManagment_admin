@@ -33,7 +33,7 @@ class _StudentSubjectsScreenState extends State<StudentSubjectsScreen> {
     String? token = await _getToken();
     if (token != null) {
       List<SubjectDTO>? fetchedSubjects =
-      await ApiService.getAllSubjects(token, widget.classEntity.course.id);
+      await ApiService.getAllSubjects(token, widget.classEntity.course.id,widget.classEntity.id);
       if (fetchedSubjects != null) {
         setState(() {
           subjects = fetchedSubjects;

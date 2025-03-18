@@ -185,10 +185,10 @@ class ApiService {
   }
 
   // Fetch all subjects for a given course
-  static Future<List<SubjectDTO>?> getAllSubjects(String token, int courseId) async {
+  static Future<List<SubjectDTO>?> getAllSubjects(String token, int courseId,int classId) async {
     try {
       final response = await http.get(
-        Uri.parse(ApiLinkHelper.getSubjectsByCourseIdApiUri(courseId)), // Define in ApiLinkHelper
+        Uri.parse(ApiLinkHelper.getSubjectsByCourseIdApiUri(courseId,classId)), // Define in ApiLinkHelper
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",
@@ -412,6 +412,58 @@ class ApiService {
     } catch (e) {
       print("Error in getTeacherDetails: $e");
       return null;
+    }
+  }
+
+  static Future<bool> assignTeacherToSubject(
+      String token, String subjectCode, String teacherId, int classId) async {
+    try {
+      final response = await http.post(
+        Uri.parse(ApiLinkHelper.assignTeacherApiUri()), // Define this in API Helper
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({
+          "subjectId": subjectCode.toString(), // Convert to String as expected by API
+          "teacherId": teacherId,
+          "classId" : classId
+        }),
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Error in assignTeacherToSubject: $e");
+      return false;
+    }
+  }
+
+  static Future<bool> updateAssignedTeacher(
+      String token, String subjectCode, String newTeacherId, int classId, String password) async {
+    try {
+      final Uri apiUrl = Uri.parse(
+          "${ApiLinkHelper.assignTeacherApiUri()}?password=$password"); // Sending password as query parameter
+
+      final response = await http.put(
+        apiUrl,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({
+          "subjectId": subjectCode, // Ensure subjectCode is a string
+          "teacherId": newTeacherId, // The new teacher's UUCMS ID
+          "classId": classId
+        }),
+      );
+
+      print("Response Code: ${response.statusCode}");
+      print("Response Body: ${response.body}");
+
+      return response.statusCode == 200; // Success condition
+    } catch (e) {
+      print("Error in updateAssignedTeacher: $e");
+      return false;
     }
   }
 }

@@ -9,7 +9,8 @@ import 'course_options_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   final bool fromAssignTeacher;
-  const CoursesScreen({super.key, required this.fromAssignTeacher});
+  final String? teacherId;
+  const CoursesScreen({super.key, required this.fromAssignTeacher,required this.teacherId});
   @override
   _CoursesScreenState createState() => _CoursesScreenState();
 }
@@ -174,7 +175,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => CourseOptionsScreen(course: courses[index],fromAssignTeacher: ,),
+                    builder: (context) => CourseOptionsScreen(course: courses[index],fromAssignTeacher: widget.fromAssignTeacher,teacherId: widget.teacherId,),
                   ),
                 );
               },

@@ -22,7 +22,7 @@ class UsersScreen extends StatelessWidget {
                 // Redirect to CoursesScreen
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => CoursesScreen(fromAssignTeacher: false,)),
+                  MaterialPageRoute(builder: (context) => CoursesScreen(fromAssignTeacher: false,teacherId: null,)),
                 );
               },
             ),

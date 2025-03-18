@@ -161,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => CoursesScreen(fromAssignTeacher: false,)),
+                      MaterialPageRoute(builder: (context) => CoursesScreen(fromAssignTeacher: false,teacherId: null,)),
                     );
                   },
                   child: Text("Courses"),

@@ -37,8 +37,8 @@ class ApiLinkHelper {
     return "${BASE_URL}Admin/course/$courseId/classes";
   }
 
-  static String getSubjectsByCourseIdApiUri(int courseId) {
-    return "${BASE_URL}Admin/course/$courseId/subjects";
+  static String getSubjectsByCourseIdApiUri(int courseId, int classId) {
+    return "${BASE_URL}Admin/course/$courseId/class/$classId/subjects";
   }
 
   static String getStudentsByClassIdApiUri(int classId) {
@@ -71,5 +71,9 @@ class ApiLinkHelper {
 
   static String getTeacherDetailsApiUri(String teacherId){
     return "${BASE_URL}Admin/Teacher/$teacherId/details";
+  }
+
+  static String assignTeacherApiUri(){
+    return "${BASE_URL}Admin/assignTeacher";
   }
 }

@@ -3,13 +3,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../helper/api_service.dart';
 import '../modules/course.dart';
 import '../modules/class_entity.dart';
+import 'AssignSubjectsScreen.dart';
 import 'students_screen.dart';
 
 class ClassesScreen extends StatefulWidget {
   final Course course;
   final bool fromAssignTeacher;
+  final String? teacherId;
 
-  ClassesScreen({required this.course,required this.fromAssignTeacher});
+  ClassesScreen({required this.course, required this.fromAssignTeacher,required this.teacherId});
 
   @override
   _ClassesScreenState createState() => _ClassesScreenState();
@@ -32,7 +34,8 @@ class _ClassesScreenState extends State<ClassesScreen> {
 
     String? token = await _getToken();
     if (token != null) {
-      List<ClassEntity>? fetchedClasses = await ApiService.getAllClasses(token, widget.course.id);
+      List<ClassEntity>? fetchedClasses =
+      await ApiService.getAllClasses(token, widget.course.id);
       if (fetchedClasses != null) {
         setState(() {
           classes = fetchedClasses;
@@ -137,14 +140,28 @@ class _ClassesScreenState extends State<ClassesScreen> {
             return ClassCard(
               classEntity: classes[index],
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => StudentsScreen(
-                      classEntity: classes[index], // Pass class details
+                if (widget.fromAssignTeacher) {
+                  // If from Assign Teacher, go to AssignSubjectsScreen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AssignSubjectsScreen(
+                        classEntity: classes[index],
+                        teacherId: widget.teacherId,
+                      ),
                     ),
-                  ),
-                );
+                  );
+                } else {
+                  // Normal navigation to StudentsScreen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => StudentsScreen(
+                        classEntity: classes[index], // Pass class details
+                      ),
+                    ),
+                  );
+                }
               },
             );
           },
@@ -193,6 +210,7 @@ class ClassCard extends StatelessWidget {
     );
   }
 }
+
 
 
 
