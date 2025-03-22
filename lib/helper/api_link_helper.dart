@@ -76,4 +76,12 @@ class ApiLinkHelper {
   static String assignTeacherApiUri(){
     return "${BASE_URL}Admin/assignTeacher";
   }
+
+  static String addUserApiUri(){
+    return "${BASE_URL}Admin/addUser";
+  }
+
+  static String addTeacherApiUri(){
+    return "${BASE_URL}Admin/addTeacher";
+  }
 }

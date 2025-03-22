@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../helper/api_service.dart';
+import '../modules/AddTeacherRequest.dart';
 import 'TeacherOptionsScreen.dart';
+import '../enums/Department.dart';
 
 class TeachersScreen extends StatefulWidget {
   @override
@@ -25,7 +27,8 @@ class _TeachersScreenState extends State<TeachersScreen> {
 
     String? token = await _getToken();
     if (token != null) {
-      List<Map<String, dynamic>>? fetchedTeachers = await ApiService.getAllTeachers(token);
+      List<Map<String, dynamic>>? fetchedTeachers =
+      await ApiService.getAllTeachers(token);
       if (fetchedTeachers != null) {
         setState(() {
           teachers = fetchedTeachers;
@@ -41,6 +44,137 @@ class _TeachersScreenState extends State<TeachersScreen> {
   Future<String?> _getToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString("auth_token");
+  }
+
+  void _showAddTeacherDialog() {
+    TextEditingController nameController = TextEditingController();
+    TextEditingController emailController = TextEditingController();
+    TextEditingController phoneController = TextEditingController();
+    TextEditingController passwordController = TextEditingController();
+    TextEditingController userNameController = TextEditingController();
+    TextEditingController firstNameController = TextEditingController();
+    TextEditingController lastNameController = TextEditingController();
+    Department? selectedDepartment;
+    bool isSubmitting = false;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text("Add New Teacher"),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: userNameController,
+                      decoration: InputDecoration(labelText: "Username"),
+                    ),
+                    TextField(
+                      controller: firstNameController,
+                      decoration: InputDecoration(labelText: "First Name"),
+                    ),
+                    TextField(
+                      controller: lastNameController,
+                      decoration: InputDecoration(labelText: "Last Name"),
+                    ),
+                    TextField(
+                      controller: emailController,
+                      decoration: InputDecoration(labelText: "Email"),
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                    TextField(
+                      controller: passwordController,
+                      decoration: InputDecoration(labelText: "Password"),
+                      obscureText: true,
+                    ),
+                    TextField(
+                      controller: phoneController,
+                      decoration: InputDecoration(labelText: "Phone"),
+                      keyboardType: TextInputType.phone,
+                    ),
+                    DropdownButtonFormField<Department>(
+                      value: selectedDepartment,
+                      decoration: InputDecoration(labelText: "Department"),
+                      items: Department.values.map((Department department) {
+                        return DropdownMenuItem<Department>(
+                          value: department,
+                          child: Text(department.value),
+                        );
+                      }).toList(),
+                      onChanged: (Department? newValue) {
+                        setDialogState(() {
+                          selectedDepartment = newValue;
+                        });
+                      },
+                    ),
+                    SizedBox(height: 20),
+                    isSubmitting ? CircularProgressIndicator() : SizedBox.shrink(),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text("Cancel"),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (userNameController.text.isEmpty ||
+                        firstNameController.text.isEmpty ||
+                        lastNameController.text.isEmpty ||
+                        emailController.text.isEmpty ||
+                        passwordController.text.isEmpty ||
+                        phoneController.text.isEmpty ||
+                        selectedDepartment == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("All fields are required")),
+                      );
+                      return;
+                    }
+
+                    setDialogState(() {
+                      isSubmitting = true;
+                    });
+
+                    final request = AddTeacherRequest(
+                      userName: userNameController.text,
+                      firstName: firstNameController.text,
+                      lastName: lastNameController.text,
+                      email: emailController.text,
+                      password: passwordController.text,
+                      phone: phoneController.text,
+                      department: selectedDepartment!.value,
+                    );
+
+                    bool success = await ApiService.addTeacher(request);
+
+                    setDialogState(() {
+                      isSubmitting = false;
+                    });
+
+                    if (success) {
+                      Navigator.pop(context); // Close dialog
+                      _fetchTeachers(); // Refresh teacher list
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Teacher added successfully!")),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Failed to add teacher")),
+                      );
+                    }
+                  },
+                  child: Text("Add"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -74,6 +208,12 @@ class _TeachersScreenState extends State<TeachersScreen> {
           );
         },
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddTeacherDialog,
+        child: Icon(Icons.add),
+        backgroundColor: Colors.blueAccent,
+        tooltip: "Add New Teacher",
+      ),
     );
   }
 }
@@ -87,14 +227,14 @@ class TeacherCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap, // Navigate to TeacherOptionsScreen on tap
+      onTap: onTap,
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         elevation: 4,
         margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         child: ListTile(
           leading: CircleAvatar(
-            child: Text(teacher['teacherName'][0]), // First letter of name
+            child: Text(teacher['teacherName'][0]),
             backgroundColor: Colors.blueAccent,
           ),
           title: Text(
@@ -111,4 +251,5 @@ class TeacherCard extends StatelessWidget {
     );
   }
 }
+
 

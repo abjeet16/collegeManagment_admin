@@ -6,9 +6,8 @@ import '../modules/course.dart';
 
 class SubjectsScreen extends StatefulWidget {
   final Course course;
-  final int classId;
 
-  SubjectsScreen({required this.course,required this.classId});
+  SubjectsScreen({required this.course});
 
   @override
   _SubjectsScreenState createState() => _SubjectsScreenState();
@@ -32,7 +31,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
     String? token = await _getToken();
     if (token != null) {
       List<SubjectDTO>? fetchedSubjects =
-      await ApiService.getAllSubjects(token, widget.course.id,widget.classId);
+      await ApiService.getAllSubjects(token, widget.course.id,-1);
       if (fetchedSubjects != null) {
         setState(() {
           subjects = fetchedSubjects;

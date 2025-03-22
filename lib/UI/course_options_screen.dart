@@ -5,7 +5,6 @@ import 'subjects_screen.dart';
 
 class CourseOptionsScreen extends StatelessWidget {
   final Course course;
-  final int classId;
   final bool fromAssignTeacher;
   final String? teacherId;
 

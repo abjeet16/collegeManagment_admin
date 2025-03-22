@@ -2,7 +2,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:oktoast/oktoast.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../helper/api_link_helper.dart';
+import '../modules/AddTeacherRequest.dart';
+import '../modules/AddUserRequest.dart';
 import '../modules/AttendanceUpdateRequest.dart';
 import '../modules/StudentDetails.dart';
 import '../modules/StudentsSubjectAttendance.dart';
@@ -463,6 +466,61 @@ class ApiService {
       return response.statusCode == 200; // Success condition
     } catch (e) {
       print("Error in updateAssignedTeacher: $e");
+      return false;
+    }
+  }
+
+  static Future<bool> addUser({
+    required String token,
+    required AddUserRequest request,
+  }) async {
+    try {
+      final Uri apiUrl = Uri.parse(ApiLinkHelper.addUserApiUri());
+
+      final response = await http.post(
+        apiUrl,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: request.toJsonString(), // Convert request object to JSON
+      );
+
+      // Debugging response
+      print("Response Code: ${response.statusCode}");
+      print("Response Body: ${response.body}");
+
+      // Return true if request is successful (status 201 - Created)
+      return response.statusCode == 201;
+    } catch (e) {
+      print("Error in addUser: $e");
+      return false;
+    }
+  }
+
+  static Future<bool> addTeacher(AddTeacherRequest request) async {
+    try {
+      // Get token from SharedPreferences (if authentication is required)
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString("auth_token");
+
+      final Uri apiUrl = Uri.parse(ApiLinkHelper.addTeacherApiUri());
+
+      final response = await http.post(
+        apiUrl,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode(request.toJson()), // Convert request object to JSON
+      );
+
+      print("Response Code: ${response.statusCode}");
+      print("Response Body: ${response.body}");
+
+      return response.statusCode == 201; // Return true if request was successful
+    } catch (e) {
+      print("Error in addTeacher: $e");
       return false;
     }
   }
