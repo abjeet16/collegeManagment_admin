@@ -1,5 +1,5 @@
 name: attendence_admin_fultter
-description: "nie college attendence app admin side"
+description: "nie college attendance app admin side"
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -8,25 +8,30 @@ environment:
   sdk: ^3.7.0
 
 dependencies:
-  oktoast: ^3.3.1
   flutter:
     sdk: flutter
 
+  # UI/Utilities
   cupertino_icons: ^1.0.8
-  shared_preferences: ^2.2.2
-  http: ^1.3.0
-  fluttertoast: ^8.2.4  # Use latest version
+  oktoast: ^3.3.1
+  fluttertoast: ^8.2.4
   intl: ^0.20.2
 
+  # State & Network
+  shared_preferences: ^2.2.2
+  http: ^1.3.0
+
+  file_picker: ^9.2.1
+  file_selector: ^1.0.3
+  excel: ^4.0.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   flutter_lints: ^5.0.0
 
 flutter:
   uses-material-design: true
+
   assets:
     - assets/login_main_image.png
-

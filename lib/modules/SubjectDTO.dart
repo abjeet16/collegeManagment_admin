@@ -3,12 +3,14 @@ class SubjectDTO {
   final String subjectName;
   final String subjectCode;
   final String? assignedTeacher;
+  final int semester;
 
   SubjectDTO({
     required this.subjectId,
     required this.subjectName,
     required this.subjectCode,
     this.assignedTeacher,
+    required this.semester
   });
 
   factory SubjectDTO.fromJson(Map<String, dynamic> json) {
@@ -17,6 +19,7 @@ class SubjectDTO {
       subjectName: json['subjectName'],
       subjectCode: json['subjectCode'],
       assignedTeacher: json['assignedTeacher'],
+      semester : json['semester']
     );
   }
 }

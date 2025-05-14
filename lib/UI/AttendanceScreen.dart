@@ -70,9 +70,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       final record = filteredRecords![index];
       bool success = await ApiService.updateAttendance(
         token,
-        widget.studentId,
-        widget.subjectId,
-        record.attendanceDate,
+        record.id,
         record.present,
       );
 

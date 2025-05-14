@@ -11,7 +11,11 @@ class ClassesScreen extends StatefulWidget {
   final bool fromAssignTeacher;
   final String? teacherId;
 
-  ClassesScreen({required this.course, required this.fromAssignTeacher,required this.teacherId});
+  ClassesScreen({
+    required this.course,
+    required this.fromAssignTeacher,
+    required this.teacherId,
+  });
 
   @override
   _ClassesScreenState createState() => _ClassesScreenState();
@@ -50,12 +54,13 @@ class _ClassesScreenState extends State<ClassesScreen> {
 
   Future<String?> _getToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString("auth_token");
+    return prefs.getString("auth_token");  // Ensure token is string or null
   }
 
   void _showAddClassDialog() {
     TextEditingController batchYearController = TextEditingController();
     TextEditingController sectionController = TextEditingController();
+    TextEditingController currentSemController = TextEditingController();
 
     showDialog(
       context: context,
@@ -77,11 +82,16 @@ class _ClassesScreenState extends State<ClassesScreen> {
                 controller: sectionController,
                 decoration: InputDecoration(labelText: "Section"),
               ),
+              TextField(
+                controller: currentSemController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(labelText: "Current Sem"),
+              ),
             ],
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context), // Close dialog
+              onPressed: () => Navigator.pop(context),
               child: Text("Cancel"),
             ),
             ElevatedButton(
@@ -90,14 +100,15 @@ class _ClassesScreenState extends State<ClassesScreen> {
                 if (token != null) {
                   bool success = await ApiService.addClass(
                     token,
-                    widget.course.courseName, // Use the course name
+                    widget.course.courseName,
                     int.tryParse(batchYearController.text) ?? 0,
                     sectionController.text,
+                    int.tryParse(currentSemController.text) ?? 0,
                   );
 
                   if (success) {
-                    Navigator.pop(context); // Close dialog on success
-                    _fetchClasses(); // Refresh the list
+                    Navigator.pop(context);
+                    _fetchClasses();
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text("Failed to add class")),
@@ -111,6 +122,56 @@ class _ClassesScreenState extends State<ClassesScreen> {
         );
       },
     );
+  }
+
+  Future<void> _deleteClass(int classId) async {
+    TextEditingController passwordController = TextEditingController();
+
+    bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Enter Admin Password"),
+        content: TextField(
+          controller: passwordController,
+          obscureText: true,
+          decoration: InputDecoration(labelText: "Password"),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text("Confirm Delete"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && passwordController.text.isNotEmpty) {
+      String? token = await _getToken();
+      if (token != null) {
+        final response = await ApiService.deleteStudentsByClassIdWithPassword(
+          classId,
+          passwordController.text,
+          token,
+        );
+
+        print("Delete Response: $response");
+
+        if (response != null && response.contains("deleted successfully")) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Class deleted successfully")),
+          );
+          _fetchClasses();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Failed to delete class")),
+          );
+        }
+      }
+    }
   }
 
   @override
@@ -130,39 +191,40 @@ class _ClassesScreenState extends State<ClassesScreen> {
         )
             : GridView.builder(
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2, // 2 classes per row
-            childAspectRatio: 2.5, // Adjusted ratio for better UI
+            crossAxisCount: 2,
+            childAspectRatio: 2.5,
             mainAxisSpacing: 10,
             crossAxisSpacing: 10,
           ),
           itemCount: classes.length,
           itemBuilder: (context, index) {
+            final classEntity = classes[index];
+
             return ClassCard(
-              classEntity: classes[index],
+              classEntity: classEntity,
               onTap: () {
                 if (widget.fromAssignTeacher) {
-                  // If from Assign Teacher, go to AssignSubjectsScreen
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => AssignSubjectsScreen(
-                        classEntity: classes[index],
+                        classEntity: classEntity,
                         teacherId: widget.teacherId,
                       ),
                     ),
                   );
                 } else {
-                  // Normal navigation to StudentsScreen
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => StudentsScreen(
-                        classEntity: classes[index], // Pass class details
+                        classEntity: classEntity,
                       ),
                     ),
                   );
                 }
               },
+              onDelete: () => _deleteClass(classEntity.id),
             );
           },
         ),
@@ -179,13 +241,18 @@ class _ClassesScreenState extends State<ClassesScreen> {
 class ClassCard extends StatelessWidget {
   final ClassEntity classEntity;
   final VoidCallback onTap;
+  final VoidCallback onDelete;
 
-  ClassCard({required this.classEntity, required this.onTap});
+  ClassCard({
+    required this.classEntity,
+    required this.onTap,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap, // Navigate when the class is clicked
+      onTap: onTap,
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         elevation: 4,
@@ -194,6 +261,13 @@ class ClassCard extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Align(
+                alignment: Alignment.topRight,
+                child: IconButton(
+                  icon: Icon(Icons.delete, color: Colors.red),
+                  onPressed: onDelete,
+                ),
+              ),
               Text(
                 classEntity.section,
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -203,6 +277,10 @@ class ClassCard extends StatelessWidget {
                 "Batch: ${classEntity.batchYear}",
                 style: TextStyle(color: Colors.grey, fontSize: 14),
               ),
+              Text(
+                "Current Sem: ${classEntity.currentSemester}",
+                style: TextStyle(color: Colors.grey, fontSize: 14),
+              ),
             ],
           ),
         ),
@@ -210,6 +288,8 @@ class ClassCard extends StatelessWidget {
     );
   }
 }
+
+
 
 
 

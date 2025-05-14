@@ -1,13 +1,17 @@
 import 'dart:convert';
+import 'package:attendence_admin_fultter/modules/UserDetailChangeReq.dart';
 import 'package:flutter/material.dart';
 import 'package:oktoast/oktoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../helper/api_link_helper.dart';
+import '../modules/AddAdminRequest.dart';
 import '../modules/AddTeacherRequest.dart';
 import '../modules/AddUserRequest.dart';
+import '../modules/AdminDetailsResponse.dart';
 import '../modules/AttendanceUpdateRequest.dart';
 import '../modules/StudentDetails.dart';
+import '../modules/StudentRegistrationDTO.dart';
 import '../modules/StudentsSubjectAttendance.dart';
 import '../modules/SubjectDTO.dart';
 import '../modules/TeacherDetailResponse.dart';
@@ -267,7 +271,7 @@ class ApiService {
       String token, String studentId, int subjectId) async {
     try {
       final response = await http.get(
-        Uri.parse(ApiLinkHelper.getStudentSubjectAttendeceUri(studentId, subjectId)),
+        Uri.parse(ApiLinkHelper.getStudentSubjectAttendanceUri(studentId, subjectId)),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",
@@ -288,7 +292,7 @@ class ApiService {
   }
 
   static Future<bool> updateAttendance(
-      String token, String studentId, int subjectId, String date, bool status) async {
+      String token,int id, bool status) async {
     try {
       final response = await http.put(
         Uri.parse(ApiLinkHelper.UpdateAttendanceUri()),
@@ -297,9 +301,7 @@ class ApiService {
           "Authorization": "Bearer $token",
         },
         body: jsonEncode({
-          "studentId": studentId,
-          "subjectId": subjectId,
-          "date": date,
+          "id":id,
           "status": status
         }),
       );
@@ -318,7 +320,7 @@ class ApiService {
   }
 
   static Future<bool> addClass(
-      String token, String course, int batchYear, String section) async {
+      String token, String course, int batchYear, String section,int currentSem) async {
     try {
       final response = await http.post(
         Uri.parse(ApiLinkHelper.AddClassUri()), // Replace with actual API endpoint
@@ -329,7 +331,8 @@ class ApiService {
         body: jsonEncode({
           "course": course,
           "batchYear": batchYear,
-          "section": section
+          "section": section,
+          "currentSemester": currentSem,
         }),
       );
 
@@ -347,7 +350,7 @@ class ApiService {
   }
 
   static Future<bool> addSubject(
-      String token, String subjectId, String subjectName, String courseName) async {
+      String token, String subjectId, String subjectName, String courseName,int semester) async {
     try {
       final response = await http.post(
         Uri.parse(ApiLinkHelper.AddSubjectUri()), // API Endpoint
@@ -358,7 +361,8 @@ class ApiService {
         body: jsonEncode({
           "subjectId": subjectId,
           "subjectName": subjectName,
-          "course": courseName // ✅ Sending courseId instead of course name
+          "course": courseName,
+          "semester":semester,
         }),
       );
 
@@ -522,6 +526,204 @@ class ApiService {
     } catch (e) {
       print("Error in addTeacher: $e");
       return false;
+    }
+  }
+
+  static Future<Map<String, dynamic>> addStudentsBulk({
+    required ClassEntity classEntity,
+    required List<StudentRegistrationDTO> students,
+  }) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString("auth_token");
+
+      final Uri apiUrl = Uri.parse(ApiLinkHelper.registerStudentsBulkApiUri());
+
+      final Map<String, dynamic> requestBody = {
+        "classEntityId": classEntity.id,
+        "students": students.map((s) => s.toJson()).toList(),
+      };
+
+      final response = await http.post(
+        apiUrl,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      print("Response Code: ${response.statusCode}");
+      print("Response Body: ${response.body}");
+
+      if (response.statusCode == 201 || response.statusCode == 400) {
+        return jsonDecode(response.body);
+      } else {
+        return {
+          "successCount": 0,
+          "failedEntries": ["Unexpected error: ${response.statusCode}"]
+        };
+      }
+    } catch (e) {
+      print("Error in addStudentsBulk: $e");
+      return {
+        "successCount": 0,
+        "failedEntries": ["Exception: $e"]
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> changeUserDetails(UserDetailChangeReq userDetails) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString("auth_token");
+
+      final Uri apiUrl = Uri.parse(ApiLinkHelper.changeUserDetailsApiUri());
+
+      final response = await http.put(
+        apiUrl,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode(userDetails.toJson()),
+      );
+
+      print("Response Code: ${response.statusCode}");
+      print("Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        // Try decoding JSON, fallback to raw string if not JSON
+        try {
+          return jsonDecode(response.body);
+        } catch (e) {
+          return {"message": response.body}; // fallback if plain string
+        }
+      } else {
+        return {
+          "message": response.body,
+          "statusCode": response.statusCode
+        };
+      }
+    } catch (e) {
+      print("Error in changeStudentDetails: $e");
+      return {"message": "Exception: $e"};
+    }
+  }
+
+  static Future<List<dynamic>> getAdmins() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString("auth_token");
+
+      final Uri apiUrl = Uri.parse(ApiLinkHelper.admins());
+
+      final response = await http.get(
+        apiUrl,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      print("GET Admins Response Code: ${response.statusCode}");
+      print("GET Admins Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        List<dynamic> jsonList = jsonDecode(response.body);
+        return jsonList.map((json) => Student.fromJson(json)).toList();
+      } else {
+        return [
+          {"error": "Failed with status: ${response.statusCode}", "message": response.body}
+        ];
+      }
+    } catch (e) {
+      print("Error in getAdmins: $e");
+      return [{"error": "Exception: $e"}];
+    }
+  }
+
+  static Future<Map<String, dynamic>> addAdmin(AddAdminRequest addAdminReqDTO) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString("auth_token");
+
+      final Uri apiUrl = Uri.parse(ApiLinkHelper.admins());
+
+      final response = await http.post(
+        apiUrl,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode(addAdminReqDTO.toJson()),
+      );
+
+      print("POST Add Admin Response Code: ${response.statusCode}");
+      print("POST Add Admin Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        return {"message": response.body};
+      } else {
+        return {
+          "error": "Failed with status: ${response.statusCode}",
+          "message": response.body
+        };
+      }
+    } catch (e) {
+      print("Error in addAdmin: $e");
+      return {"error": "Exception: $e"};
+    }
+  }
+
+  static Future<AdminDetailResponse?> getAdminById(String adminId) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString("auth_token");
+
+      final Uri apiUrl = Uri.parse("${ApiLinkHelper.admins()}/$adminId");
+
+      final response = await http.get(
+        apiUrl,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      print("GET Admin by ID Response Code: ${response.statusCode}");
+      print("GET Admin by ID Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        return AdminDetailResponse.fromJson(jsonDecode(response.body));
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print("Error in getAdminById: $e");
+      return null;
+    }
+  }
+
+  static Future<String?> deleteStudentsByClassIdWithPassword(
+      int classId, String password, String token) async {
+    try {
+      final response = await http.delete(
+        Uri.parse("${ApiLinkHelper.deleteCLass(classId)}?password=$password"),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return response.body;
+      } else {
+        print("API Error: ${response.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      print("Exception during delete: $e");
+      return null;
     }
   }
 }

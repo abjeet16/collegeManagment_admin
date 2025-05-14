@@ -52,6 +52,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
   void _showAddSubjectDialog() {
     TextEditingController subjectIdController = TextEditingController();
     TextEditingController subjectNameController = TextEditingController();
+    TextEditingController SemController = TextEditingController();
 
     showDialog(
       context: context,
@@ -72,6 +73,11 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                 controller: subjectNameController,
                 decoration: InputDecoration(labelText: "Subject Name"),
               ),
+              TextField(
+                controller: SemController,
+                decoration: InputDecoration(labelText: "Semester"),
+                keyboardType: TextInputType.number,
+              ),
             ],
           ),
           actions: [
@@ -87,7 +93,8 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                     token,
                     subjectIdController.text,
                     subjectNameController.text,
-                    widget.course.courseName, // ✅ Pass courseId instead of course name
+                    widget.course.courseName,
+                    int.tryParse(SemController.text)?? 0
                   );
 
                   if (success) {
@@ -168,6 +175,10 @@ class SubjectCard extends StatelessWidget {
             SizedBox(height: 5),
             Text(
               "Code: ${subject.subjectCode}",
+              style: TextStyle(color: Colors.grey),
+            ),
+            Text(
+              "Sem : ${subject.semester}",
               style: TextStyle(color: Colors.grey),
             ),
           ],

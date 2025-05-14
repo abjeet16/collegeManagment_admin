@@ -1,6 +1,5 @@
 import 'package:attendence_admin_fultter/UI/CoursesScreen.dart';
 import 'package:flutter/material.dart';
-
 import 'AdminsScreen.dart';
 import 'TeachersScreen.dart';// Replace with actual Admins screen
 

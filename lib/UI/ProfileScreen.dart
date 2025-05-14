@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../helper/api_service.dart';
+import '../modules/UserDetailChangeReq.dart';
 import '../modules/user_profile.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -9,10 +10,12 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  String firstName = "Abjeet";
-  String lastName = "Yadav";
-  String email = "user@example.com";
-  String phone = "9353266834";
+  String firstName = "Error";
+  String lastName = "Error";
+  String email = "Error";
+  String phone = "Error";
+  String universityId = "N/A";
+  TextEditingController adminPasswordController = TextEditingController();
 
   @override
   void initState() {
@@ -28,6 +31,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       UserProfile? profile = await ApiService.getUserProfile(token);
       if (profile != null) {
         setState(() {
+          universityId = profile.universityId;
           firstName = profile.firstName;
           lastName = profile.lastName;
           email = profile.email;
@@ -38,11 +42,75 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _saveUpdatedUserData() async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setString("first_name", firstName);
-    prefs.setString("last_name", lastName);
-    prefs.setString("email", email);
-    prefs.setString("phone", phone);
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Admin Authentication"),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("Enter Admin Password to save changes"),
+                TextField(
+                  controller: adminPasswordController,
+                  obscureText: true,
+                  decoration: InputDecoration(labelText: "Admin Password"),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (adminPasswordController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Admin password is required")),
+                  );
+                  return;
+                }
+
+                UserDetailChangeReq userDetails = UserDetailChangeReq(
+                  universityId: universityId,
+                  firstName: firstName,
+                  lastName: lastName,
+                  email: email,
+                  phone: int.tryParse(phone),
+                  adminPassword: adminPasswordController.text,
+                );
+
+                try {
+                  Map<String, dynamic> response =
+                  await ApiService.changeUserDetails(userDetails);
+                  print("API Response: $response");
+
+                  Navigator.pop(context); // Close dialog
+
+                  // Show actual response message
+                  String message = response['message'] ?? response.toString();
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(message)),
+                  );
+
+                  _loadUserData(); // Refresh profile
+                } catch (e) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("An error occurred: $e")),
+                  );
+                }
+              },
+              child: Text("Confirm"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _editProfile() {
@@ -60,16 +128,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(controller: firstNameController, decoration: InputDecoration(labelText: "First Name")),
-                TextField(controller: lastNameController, decoration: InputDecoration(labelText: "Last Name")),
-                TextField(controller: emailController, decoration: InputDecoration(labelText: "Email")),
-                TextField(controller: phoneController, decoration: InputDecoration(labelText: "Phone")),
+                _buildTextField("First Name", firstNameController),
+                _buildTextField("Last Name", lastNameController),
+                _buildTextField("Email", emailController),
+                _buildTextField("Phone", phoneController),
               ],
             ),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(context), child: Text("Cancel")),
-            TextButton(
+            ElevatedButton(
               onPressed: () {
                 setState(() {
                   firstName = firstNameController.text;
@@ -77,8 +145,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   email = emailController.text;
                   phone = phoneController.text;
                 });
-                _saveUpdatedUserData();
                 Navigator.pop(context);
+                _saveUpdatedUserData();
               },
               child: Text("Save"),
             ),
@@ -88,23 +156,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileRow(String title, String value) {
+  Widget _buildTextField(String label, TextEditingController controller) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "$title: ",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      padding: const EdgeInsets.symmetric(vertical: 5.0),
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(labelText: label, border: OutlineInputBorder()),
+      ),
+    );
+  }
+
+  Widget _buildProfileRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 10.0),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: RichText(
+          text: TextSpan(
+            text: "$label: ",
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
+            children: [
+              TextSpan(
+                text: value,
+                style: TextStyle(fontWeight: FontWeight.normal),
+              ),
+            ],
           ),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(fontSize: 16),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -139,5 +217,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
+
+
+
+
+
+
 
 

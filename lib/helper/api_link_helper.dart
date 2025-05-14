@@ -1,5 +1,5 @@
 class ApiLinkHelper {
-  static const String BASE_URL = "http://192.168.29.30:8080/api/v1/";
+  static const String BASE_URL = "http://192.168.182.68:8080/api/v1/";
 
   static String loginUserApiUri() {
     return "${BASE_URL}auth/user/login";
@@ -49,8 +49,8 @@ class ApiLinkHelper {
     return "${BASE_URL}Admin/student/$studentId";
   }
 
-  static String getStudentSubjectAttendeceUri(String studentId,int subjectId){
-    return "${BASE_URL}Admin/attendence?studentId=$studentId&subjectId=$subjectId";
+  static String getStudentSubjectAttendanceUri(String studentId,int subjectId){
+    return "${BASE_URL}Admin/attendance/student/$studentId/subject/$subjectId";
   }
 
   static String UpdateAttendanceUri() {
@@ -83,5 +83,21 @@ class ApiLinkHelper {
 
   static String addTeacherApiUri(){
     return "${BASE_URL}Admin/addTeacher";
+  }
+
+  static String registerStudentsBulkApiUri() {
+    return "${BASE_URL}Admin/student/register-bulk";
+  }
+
+  static String changeUserDetailsApiUri(){
+    return "${BASE_URL}Admin/user/changeDetails";
+  }
+
+  static String admins(){
+    return "${BASE_URL}Admin";
+  }
+
+  static String deleteCLass(int classId){
+    return "${BASE_URL}Admin/deleteStudents/$classId";
   }
 }
