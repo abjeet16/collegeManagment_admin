@@ -4,8 +4,8 @@ import '../helper/api_service.dart';
 import '../modules/user_profile.dart';
 import 'ProfileScreen.dart';
 import 'login_screen.dart';
-import 'UsersScreen.dart';  // Import Users Screen
-import 'CoursesScreen.dart'; // Import Courses Screen
+import 'UsersScreen.dart';
+import 'CoursesScreen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -81,6 +81,54 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Future<void> _promoteAllStudents() async {
+    final pwdController = TextEditingController();
+
+    final bool confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Promote All Students'),
+        content: TextField(
+          controller: pwdController,
+          decoration: const InputDecoration(
+            labelText: 'Enter your password',
+            border: OutlineInputBorder(),
+          ),
+          obscureText: true,
+        ),
+        actions: [
+          TextButton(
+            child: const Text('Cancel'),
+            onPressed: () => Navigator.pop(context, false),
+          ),
+          TextButton(
+            child: const Text('Promote',
+                style: TextStyle(color: Colors.green)),
+            onPressed: () => Navigator.pop(context, true),
+          ),
+        ],
+      ),
+    ) ??
+        false;
+
+    if (!confirmed) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token') ?? '';
+
+    final String? result = await ApiService.promoteStudentsWithPassword(
+        pwdController.text.trim(), token);
+
+    final bool success = result != null;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(success ? result! : 'Promotion failed'),
+        backgroundColor: success ? Colors.green : Colors.red,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -140,6 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: IndexedStack(
         index: _selectedIndex,
         children: [
+          // Home Screen
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -153,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                   child: Text("Users"),
                   style: ElevatedButton.styleFrom(
-                    minimumSize: Size(150, 50), // Button size
+                    minimumSize: Size(150, 50),
                   ),
                 ),
                 SizedBox(height: 20),
@@ -161,24 +210,49 @@ class _HomeScreenState extends State<HomeScreen> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => CoursesScreen(fromAssignTeacher: false,teacherId: null,)),
+                      MaterialPageRoute(
+                        builder: (context) => CoursesScreen(
+                          fromAssignTeacher: false,
+                          teacherId: null,
+                        ),
+                      ),
                     );
                   },
                   child: Text("Courses"),
                   style: ElevatedButton.styleFrom(
-                    minimumSize: Size(150, 50), // Button size
+                    minimumSize: Size(150, 50),
                   ),
                 ),
               ],
             ),
           ),
+
+          // Profile Screen
           ProfileScreen(),
-          Center(child: Text("Settings Screen")),
+
+          // Settings Screen with Promote button
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: _promoteAllStudents,
+                  child: Text("Promote All Students"),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: Size(200, 50),
+                    backgroundColor: Colors.green,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 }
+
+
 
 
 

@@ -1,5 +1,7 @@
+import 'package:flutter/material.dart';
+
 class ApiLinkHelper {
-  static const String BASE_URL = "http://192.168.182.68:8080/api/v1/";
+  static const String BASE_URL = "http://localhost:8080/api/v1/";
 
   static String loginUserApiUri() {
     return "${BASE_URL}auth/user/login";
@@ -99,5 +101,9 @@ class ApiLinkHelper {
 
   static String deleteCLass(int classId){
     return "${BASE_URL}Admin/deleteStudents/$classId";
+  }
+
+  static String promoteALlStudents(String password){
+    return "${BASE_URL}Admin/promoteStudents?password=$password";
   }
 }

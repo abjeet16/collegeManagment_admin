@@ -726,6 +726,29 @@ class ApiService {
       return null;
     }
   }
+
+  static Future<String?> promoteStudentsWithPassword(
+      String password, String token) async {
+    try {
+      final response = await http.put(
+        Uri.parse(ApiLinkHelper.promoteALlStudents(password)),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return response.body;            // e.g. “All students promoted”
+      } else {
+        print("API Error: ${response.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      print("Exception during promote: $e");
+      return null;
+    }
+  }
+
 }
 
 
