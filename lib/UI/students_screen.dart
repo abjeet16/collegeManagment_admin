@@ -23,7 +23,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
   List<Student> students = [];
   List<Student> filteredStudents = [];
   bool isLoading = true;
-  bool isUploading = false; // ✅ New state
+  bool isUploading = false;
   TextEditingController searchController = TextEditingController();
 
   @override
@@ -39,8 +39,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
 
     String? token = await _getToken();
     if (token != null) {
-      List<Student>? fetchedStudents =
-      await ApiService.getStudentsByClassId(token, widget.classEntity.id);
+      List<Student>? fetchedStudents = await ApiService.getStudentsByClassId(token, widget.classEntity.id);
       if (fetchedStudents != null) {
         setState(() {
           students = fetchedStudents;
@@ -64,118 +63,80 @@ class _StudentsScreenState extends State<StudentsScreen> {
       if (query.isEmpty) {
         filteredStudents = students;
       } else {
-        filteredStudents = students
-            .where((student) => student.studentName
-            .toLowerCase()
-            .contains(query.toLowerCase()))
-            .toList();
+        filteredStudents = students.where((student) => student.studentName.toLowerCase().contains(query.toLowerCase())).toList();
       }
     });
   }
 
-  Future<void> _pickAndUploadExcel() async {
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['xlsx', 'xls'],
-        withData: true,
-      );
+  void _showDeleteConfirmationDialog(Student student) {
+    final adminPassController = TextEditingController();
+    final confirmPassController = TextEditingController();
 
-      if (result == null) {
-        print("❌ No file selected.");
-        return;
-      }
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Delete Student"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "Are you sure you want to delete student '${student.studentName}' (ID: ${student.studentId})?\n\n⚠️ This will permanently delete all related data including attendance.",
+              ),
+              SizedBox(height: 16),
+              TextField(
+                controller: adminPassController,
+                decoration: InputDecoration(labelText: "Admin Password"),
+                obscureText: true,
+              ),
+              TextField(
+                controller: confirmPassController,
+                decoration: InputDecoration(labelText: "Confirm Password"),
+                obscureText: true,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: Text("Cancel")),
+            ElevatedButton(
+              onPressed: () async {
+                if (adminPassController.text.isEmpty || confirmPassController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Please enter both passwords.")));
+                  return;
+                }
+                if (adminPassController.text != confirmPassController.text) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Passwords do not match.")));
+                  return;
+                }
 
-      setState(() {
-        isUploading = true; // ✅ Start uploading state
-      });
+                String? token = await _getToken();
+                if (token == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Not authorized.")));
+                  return;
+                }
 
-      final fileBytes = result.files.single.bytes;
-      final filePath = result.files.single.path;
-      List<int>? excelBytes;
+                final result = await ApiService.deleteStudentById(
+                  studentId: student.studentId,
+                  adminPassword: adminPassController.text,
+                  token: token,
+                );
 
-      if (fileBytes != null) {
-        excelBytes = fileBytes;
-      } else if (filePath != null) {
-        final file = File(filePath);
-        excelBytes = await file.readAsBytes();
-      }
+                Navigator.pop(context);
 
-      if (excelBytes == null) {
-        print("❌ Unable to read file bytes");
-        setState(() {
-          isUploading = false;
-        });
-        return;
-      }
-
-      final excel = Excel.decodeBytes(excelBytes);
-      final sheet = excel.tables[excel.tables.keys.first];
-
-      if (sheet == null) {
-        print("❌ Excel sheet is null or empty");
-        setState(() {
-          isUploading = false;
-        });
-        return;
-      }
-
-      List<StudentRegistrationDTO> studentsToRegister = [];
-
-      for (int rowIndex = 1; rowIndex < sheet.maxRows; rowIndex++) {
-        final row = sheet.row(rowIndex);
-
-        if (row.length < 6) continue;
-
-        final student = StudentRegistrationDTO(
-          userName: row[0]?.value.toString() ?? "",
-          firstName: row[1]?.value.toString() ?? "",
-          lastName: row[2]?.value.toString() ?? "",
-          email: row[3]?.value.toString() ?? "",
-          phone: row[4]?.value.toString() ?? "",
-          password: row[5]?.value.toString() ?? "",
+                if (result != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Student deleted successfully.")));
+                  await _fetchStudents();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to delete student.")));
+                }
+              },
+              child: Text("Delete"),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            ),
+          ],
         );
-
-        if (student.userName.isNotEmpty &&
-            student.firstName.isNotEmpty &&
-            student.lastName.isNotEmpty &&
-            student.email.isNotEmpty &&
-            student.phone.isNotEmpty &&
-            student.password.isNotEmpty) {
-          studentsToRegister.add(student);
-        }
-      }
-
-      if (studentsToRegister.isNotEmpty) {
-        final result = await ApiService.addStudentsBulk(
-          classEntity: widget.classEntity,
-          students: studentsToRegister,
-        );
-
-        final count = result["successCount"] ?? 0;
-        final errors = result["failedEntries"] ?? [];
-
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Uploaded $count students. Errors: ${errors.length}"),
-          duration: Duration(seconds: 4),
-        ));
-
-        await _fetchStudents();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("No valid student data found in the Excel file."),
-        ));
-      }
-    } catch (e) {
-      print("❌ Excel upload error: $e");
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text("Failed to upload Excel: $e"),
-      ));
-    } finally {
-      setState(() {
-        isUploading = false; // ✅ Done uploading
-      });
-    }
+      },
+    );
   }
 
   @override
@@ -194,9 +155,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
                   decoration: InputDecoration(
                     labelText: "Search by name",
                     prefixIcon: Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
               ),
@@ -204,74 +163,45 @@ class _StudentsScreenState extends State<StudentsScreen> {
                 child: isLoading
                     ? Center(child: CircularProgressIndicator())
                     : filteredStudents.isEmpty
-                    ? Center(
-                  child: Text(
-                    "No students found",
-                    style: TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                )
+                    ? Center(child: Text("No students found", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)))
                     : ListView.builder(
                   padding: const EdgeInsets.all(8.0),
                   itemCount: filteredStudents.length,
                   itemBuilder: (context, index) {
-                    return GestureDetector(
+                    return StudentCard(
+                      student: filteredStudents[index],
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                StudentOptionsScreen(
-                                  studentId:
-                                  filteredStudents[index].studentId,
-                                  classEntity: widget.classEntity,
-                                ),
+                            builder: (context) => StudentOptionsScreen(
+                              studentId: filteredStudents[index].studentId,
+                              classEntity: widget.classEntity,
+                            ),
                           ),
                         );
                       },
-                      child: StudentCard(
-                        student: filteredStudents[index],
-                      ),
+                      onDelete: () {
+                        _showDeleteConfirmationDialog(filteredStudents[index]);
+                      },
                     );
                   },
                 ),
               ),
             ],
           ),
-          if (isUploading)
-            Container(
-              color: Colors.black54,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text(
-                      "Adding students...",
-                      style: TextStyle(color: Colors.white, fontSize: 18),
-                    ),
-                  ],
-                ),
-              ),
-            ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: isUploading ? null : _pickAndUploadExcel,
-        child: Icon(Icons.upload_file),
-        tooltip: "Upload Excel",
-        backgroundColor: isUploading ? Colors.grey : Colors.blueAccent,
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
 
 class StudentCard extends StatelessWidget {
   final Student student;
+  final VoidCallback onTap;
+  final VoidCallback onDelete;
 
-  StudentCard({required this.student});
+  StudentCard({required this.student, required this.onTap, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -287,15 +217,18 @@ class StudentCard extends StatelessWidget {
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
         ),
-        title: Text(
-          student.studentName,
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-        ),
+        title: Text(student.studentName, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
         subtitle: Text("ID: ${student.studentId}"),
+        trailing: IconButton(
+          icon: Icon(Icons.delete, color: Colors.red),
+          onPressed: onDelete,
+        ),
+        onTap: onTap,
       ),
     );
   }
 }
+
 
 
 

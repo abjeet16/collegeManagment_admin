@@ -11,6 +11,10 @@ class ApiLinkHelper {
     return "${BASE_URL}User/my_profile";
   }
 
+  static String verifyToken(){
+    return "${BASE_URL}auth/is_token_expired";
+  }
+
   static String getMyClassesApiUri() {
     return "${BASE_URL}teacher/my_classes";
   }
@@ -105,5 +109,13 @@ class ApiLinkHelper {
 
   static String promoteALlStudents(String password){
     return "${BASE_URL}Admin/promoteStudents?password=$password";
+  }
+
+  static String deleteTeacher(String teacherId, String adminPassword){
+    return "${BASE_URL}Admin/deleteTeacher/$teacherId?adminPassword=$adminPassword";
+  }
+
+  static String deleteStudent(String studentId, String adminPassword){
+    return "${BASE_URL}Admin/deleteTeacher/$studentId?adminPassword=$adminPassword";
   }
 }

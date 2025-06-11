@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // Import login response model
+import 'package:shared_preferences/shared_preferences.dart';
 import '../helper/api_service.dart';
 import '../modules/UserLoginRequest.dart';
 import '../modules/UserLoginResponse.dart';
-import 'home_screen.dart'; // Import home screen for navigation
+import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -18,13 +18,11 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _loginUser() async {
     setState(() => _isLoading = true);
 
-    // Create login request object
     UserLoginRequest loginRequest = UserLoginRequest(
       uucmsId: _uucmsIdController.text.trim(),
       password: _passwordController.text,
     );
 
-    // Call API
     UserLoginResponse? userData = await ApiService.loginUser(loginRequest);
 
     if (userData != null) {
@@ -32,8 +30,10 @@ class _LoginScreenState extends State<LoginScreen> {
       await prefs.setString("auth_token", userData.token);
       await prefs.setString("username", userData.username);
 
-      // Navigate to HomeScreen
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+      );
     } else {
       print("Login failed!");
     }
@@ -49,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset("assets/login_main_image.png", height: 150), // Login image
+            Image.asset("assets/login_main_image.png", height: 150),
             Text(
               "Sign In",
               style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
@@ -64,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
             TextField(
               controller: _passwordController,
               decoration: InputDecoration(labelText: "Password"),
-              obscureText: true, // Hide password input
+              obscureText: true,
             ),
             SizedBox(height: 20),
             _isLoading
@@ -79,3 +79,4 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+

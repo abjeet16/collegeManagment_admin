@@ -46,8 +46,84 @@ class _TeachersScreenState extends State<TeachersScreen> {
     return prefs.getString("auth_token");
   }
 
+  void _showDeleteConfirmationDialog(BuildContext context, String teacherId) {
+    TextEditingController passwordController = TextEditingController();
+    TextEditingController confirmPasswordController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Delete Teacher"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text("⚠️ This will delete all records for Teacher ID: $teacherId"),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: InputDecoration(labelText: "Admin Password"),
+              ),
+              TextField(
+                controller: confirmPasswordController,
+                obscureText: true,
+                decoration: InputDecoration(labelText: "Confirm Password"),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (passwordController.text.isEmpty ||
+                    confirmPasswordController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Both fields are required")),
+                  );
+                  return;
+                }
+
+                if (passwordController.text != confirmPasswordController.text) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Passwords do not match")),
+                  );
+                  return;
+                }
+
+                String? token = await _getToken();
+                if (token != null) {
+                  String? result = await ApiService.deleteTeacherById(
+                    teacherId: teacherId,
+                    adminPassword: passwordController.text,
+                    token: token,
+                  );
+
+                  Navigator.pop(context); // Close dialog
+
+                  if (result != null) {
+                    _fetchTeachers(); // Refresh
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Teacher deleted successfully")),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Failed to delete teacher")),
+                    );
+                  }
+                }
+              },
+              child: Text("Delete"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showAddTeacherDialog() {
-    TextEditingController nameController = TextEditingController();
     TextEditingController emailController = TextEditingController();
     TextEditingController phoneController = TextEditingController();
     TextEditingController passwordController = TextEditingController();
@@ -111,7 +187,9 @@ class _TeachersScreenState extends State<TeachersScreen> {
                       },
                     ),
                     SizedBox(height: 20),
-                    isSubmitting ? CircularProgressIndicator() : SizedBox.shrink(),
+                    isSubmitting
+                        ? CircularProgressIndicator()
+                        : SizedBox.shrink(),
                   ],
                 ),
               ),
@@ -205,6 +283,10 @@ class _TeachersScreenState extends State<TeachersScreen> {
                 ),
               );
             },
+            onDeletePressed: () {
+              _showDeleteConfirmationDialog(
+                  context, teachers[index]['teacherId']);
+            },
           );
         },
       ),
@@ -221,8 +303,13 @@ class _TeachersScreenState extends State<TeachersScreen> {
 class TeacherCard extends StatelessWidget {
   final Map<String, dynamic> teacher;
   final VoidCallback onTap;
+  final VoidCallback onDeletePressed;
 
-  TeacherCard({required this.teacher, required this.onTap});
+  TeacherCard({
+    required this.teacher,
+    required this.onTap,
+    required this.onDeletePressed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -242,14 +329,15 @@ class TeacherCard extends StatelessWidget {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           subtitle: Text("Department: ${teacher['department']}"),
-          trailing: Text(
-            teacher['teacherId'],
-            style: TextStyle(color: Colors.grey),
+          trailing: IconButton(
+            icon: Icon(Icons.delete, color: Colors.red),
+            onPressed: onDeletePressed,
           ),
         ),
       ),
     );
   }
 }
+
 
 

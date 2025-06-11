@@ -749,6 +749,89 @@ class ApiService {
     }
   }
 
+  static Future<bool?> checkTokenExpired(String token) async {
+    try {
+      final uri = Uri.parse(ApiLinkHelper.verifyToken())
+          .replace(queryParameters: {"token": token});
+
+      final response = await http.post(uri);
+
+      if (response.statusCode == 200) {
+        // The backend returns "true" or "false" as plain text or JSON
+        final body = response.body.toLowerCase();
+        print(token);
+        print("token is : "+body);
+        if (body == 'true') return true;
+        if (body == 'false') return false;
+        print("Unexpected response body: ${response.body}");
+        return null;
+      } else {
+        print("API Error: ${response.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      print("Exception during token check: $e");
+      return null;
+    }
+  }
+
+  static Future<String?> deleteTeacherById({
+    required String teacherId,
+    required String adminPassword,
+    required String token,
+  }) async {
+    try {
+      final url = Uri.parse(
+        ApiLinkHelper.deleteTeacher(teacherId, adminPassword),
+      );
+
+      final response = await http.delete(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return response.body;
+      } else {
+        print("API Error: ${response.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      print("Exception during deleteTeacher: $e");
+      return null;
+    }
+  }
+
+  static Future<String?> deleteStudentById({
+    required String studentId,
+    required String adminPassword,
+    required String token,
+  }) async {
+    try {
+      final url = Uri.parse(
+        ApiLinkHelper.deleteStudent(studentId, adminPassword),
+      );
+
+      final response = await http.delete(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return response.body; // e.g. "Student deleted successfully"
+      } else {
+        print("API Error: ${response.statusCode} - ${response.body}");
+        return null;
+      }
+    } catch (e) {
+      print("Exception during deleteStudent: $e");
+      return null;
+    }
+  }
 }
 
 
