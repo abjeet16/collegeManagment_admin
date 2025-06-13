@@ -111,11 +111,15 @@ class ApiLinkHelper {
     return "${BASE_URL}Admin/promoteStudents?password=$password";
   }
 
+  static String demoteAllStudents(String password){
+    return "${BASE_URL}Admin/demoteStudents?password=$password";
+  }
+
   static String deleteTeacher(String teacherId, String adminPassword){
     return "${BASE_URL}Admin/deleteTeacher/$teacherId?adminPassword=$adminPassword";
   }
 
   static String deleteStudent(String studentId, String adminPassword){
-    return "${BASE_URL}Admin/deleteTeacher/$studentId?adminPassword=$adminPassword";
+    return "${BASE_URL}Admin/deleteStudent/$studentId?adminPassword=$adminPassword";
   }
 }

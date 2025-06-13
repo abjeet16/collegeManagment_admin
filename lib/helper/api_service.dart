@@ -749,6 +749,28 @@ class ApiService {
     }
   }
 
+  static Future<String?> demoteStudentsWithPassword(
+      String password, String token) async {
+    try {
+      final response = await http.put(
+        Uri.parse(ApiLinkHelper.demoteAllStudents(password)),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return response.body;            // e.g. “All students promoted”
+      } else {
+        print("API Error: ${response.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      print("Exception during promote: $e");
+      return null;
+    }
+  }
+
   static Future<bool?> checkTokenExpired(String token) async {
     try {
       final uri = Uri.parse(ApiLinkHelper.verifyToken())

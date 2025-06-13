@@ -102,8 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () => Navigator.pop(context, false),
           ),
           TextButton(
-            child: const Text('Promote',
-                style: TextStyle(color: Colors.green)),
+            child: const Text('Promote', style: TextStyle(color: Colors.green)),
             onPressed: () => Navigator.pop(context, true),
           ),
         ],
@@ -124,6 +123,53 @@ class _HomeScreenState extends State<HomeScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(success ? result! : 'Promotion failed'),
+        backgroundColor: success ? Colors.green : Colors.red,
+      ),
+    );
+  }
+
+  Future<void> _demoteAllStudents() async {
+    final pwdController = TextEditingController();
+
+    final bool confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Demote All Students'),
+        content: TextField(
+          controller: pwdController,
+          decoration: const InputDecoration(
+            labelText: 'Enter your password',
+            border: OutlineInputBorder(),
+          ),
+          obscureText: true,
+        ),
+        actions: [
+          TextButton(
+            child: const Text('Cancel'),
+            onPressed: () => Navigator.pop(context, false),
+          ),
+          TextButton(
+            child: const Text('Demote', style: TextStyle(color: Colors.red)),
+            onPressed: () => Navigator.pop(context, true),
+          ),
+        ],
+      ),
+    ) ??
+        false;
+
+    if (!confirmed) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token') ?? '';
+
+    final String? result = await ApiService.demoteStudentsWithPassword(
+        pwdController.text.trim(), token);
+
+    final bool success = result != null;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(success ? result! : 'Demotion failed'),
         backgroundColor: success ? Colors.green : Colors.red,
       ),
     );
@@ -230,7 +276,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // Profile Screen
           ProfileScreen(),
 
-          // Settings Screen with Promote button
+          // Settings Screen
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -243,6 +289,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     backgroundColor: Colors.green,
                   ),
                 ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _demoteAllStudents,
+                  child: Text("Demote All Students"),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: Size(200, 50),
+                    backgroundColor: Colors.red,
+                  ),
+                ),
               ],
             ),
           ),
@@ -251,6 +306,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
 
 
 

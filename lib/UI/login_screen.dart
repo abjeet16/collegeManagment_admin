@@ -49,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset("assets/login_main_image.png", height: 150),
+            Image.asset("assets/images/login_main_image.png", height: 150),
             Text(
               "Sign In",
               style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),

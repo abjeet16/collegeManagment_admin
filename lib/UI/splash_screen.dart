@@ -43,10 +43,24 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Image.asset(
-          'assets/nieLogo.svg',
-          width: 200,
-          height: 200,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/images/nieLogo.png',
+              width: 200,
+              height: 200,
+            ),
+            SizedBox(height: 16),
+            Text(
+              'NIE First Grade College',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepPurple, // You can change to any color you like
+              ),
+            ),
+          ],
         ),
       ),
     );
