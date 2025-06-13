@@ -81,7 +81,6 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
 
-                // ✅ Only update local teacher object if backend confirms update
                 if (message.toLowerCase().contains("success")) {
                   setState(() {
                     teacher = teacher.copyWith(
@@ -143,8 +142,6 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
 
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-
-                // ✅ no local teacher update needed for password
               } catch (e) {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
@@ -168,6 +165,44 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
     );
   }
 
+  Widget _infoRow(String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          Icon(_getIconForField(title), color: Colors.blue),
+          SizedBox(width: 10),
+          Text(
+            "$title: ",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(fontSize: 16),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getIconForField(String field) {
+    switch (field) {
+      case "Email":
+        return Icons.email;
+      case "Phone":
+        return Icons.phone;
+      case "Department":
+        return Icons.school;
+      case "Teacher ID":
+        return Icons.badge;
+      default:
+        return Icons.info_outline;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -180,22 +215,44 @@ class _TeacherProfileScreenState extends State<TeacherProfileScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Name: ${teacher.firstName} ${teacher.lastName}", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            SizedBox(height: 10),
-            Text("Email: ${teacher.email}", style: TextStyle(fontSize: 16)),
-            Text("Phone: ${teacher.phone}", style: TextStyle(fontSize: 16)),
-            Text("Department: ${teacher.department}", style: TextStyle(fontSize: 16)),
-            Text("Teacher ID: ${teacher.teacherId}", style: TextStyle(fontSize: 16)),
-          ],
+        child: SingleChildScrollView(
+          child: Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            elevation: 4,
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: CircleAvatar(
+                      radius: 40,
+                      child: Text(
+                        teacher.firstName[0] + teacher.lastName[0],
+                        style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  Center(
+                    child: Text(
+                      "${teacher.firstName} ${teacher.lastName}",
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Divider(height: 30, thickness: 1),
+                  _infoRow("Teacher ID", teacher.teacherId),
+                  _infoRow("Email", teacher.email),
+                  _infoRow("Phone", teacher.phone),
+                  _infoRow("Department", teacher.department),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 }
-
-
 
 

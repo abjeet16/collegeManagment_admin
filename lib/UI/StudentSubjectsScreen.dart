@@ -3,13 +3,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../helper/api_service.dart';
 import '../modules/SubjectDTO.dart';
 import '../modules/class_entity.dart';
-import 'AttendanceScreen.dart';
+import 'students_screen.dart'; // <== Import StudentsScreen
 
 class StudentSubjectsScreen extends StatefulWidget {
-  final String studentId;
   final ClassEntity classEntity;
 
-  StudentSubjectsScreen({required this.studentId, required this.classEntity});
+  StudentSubjectsScreen({required this.classEntity});
 
   @override
   _StudentSubjectsScreenState createState() => _StudentSubjectsScreenState();
@@ -32,8 +31,12 @@ class _StudentSubjectsScreenState extends State<StudentSubjectsScreen> {
 
     String? token = await _getToken();
     if (token != null) {
-      List<SubjectDTO>? fetchedSubjects =
-      await ApiService.getAllSubjects(token, widget.classEntity.course.id,widget.classEntity.id);
+      List<SubjectDTO>? fetchedSubjects = await ApiService.getAllSubjects(
+        token,
+        widget.classEntity.course.id,
+        widget.classEntity.id,
+      );
+
       if (fetchedSubjects != null) {
         setState(() {
           subjects = fetchedSubjects;
@@ -67,19 +70,19 @@ class _StudentSubjectsScreenState extends State<StudentSubjectsScreen> {
           : ListView.builder(
         itemCount: subjects.length,
         itemBuilder: (context, index) {
-          // Check if assignedTeacher is null or empty
-          bool isTeacherAssigned = subjects[index].assignedTeacher != null &&
-              subjects[index].assignedTeacher!.isNotEmpty;
+          final subject = subjects[index];
+          bool isTeacherAssigned = subject.assignedTeacher != null &&
+              subject.assignedTeacher!.isNotEmpty;
 
           return GestureDetector(
             onTap: () {
+              // 👉 Navigate to StudentsScreen with classEntity
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => AttendanceScreen(
-                    studentId: widget.studentId,
+                  builder: (context) => StudentsScreen(
                     classEntity: widget.classEntity,
-                    subjectId: subjects[index].subjectId, // Pass subjectId
+                    subjectId: subject.subjectId,
                   ),
                 ),
               );
@@ -88,16 +91,16 @@ class _StudentSubjectsScreenState extends State<StudentSubjectsScreen> {
               margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
               child: ListTile(
                 title: Text(
-                  subjects[index].subjectName,
+                  subject.subjectName,
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Code: ${subjects[index].subjectCode}"),
+                    Text("Code: ${subject.subjectCode}"),
                     Text(
                       isTeacherAssigned
-                          ? "Assigned Teacher: ${subjects[index].assignedTeacher}"
+                          ? "Assigned Teacher: ${subject.assignedTeacher}"
                           : "No Teacher ASSIGNED",
                       style: TextStyle(
                         fontSize: 14,
@@ -116,4 +119,3 @@ class _StudentSubjectsScreenState extends State<StudentSubjectsScreen> {
     );
   }
 }
-

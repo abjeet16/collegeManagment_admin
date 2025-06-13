@@ -12,8 +12,9 @@ import '../modules/class_entity.dart';
 
 class StudentsScreen extends StatefulWidget {
   final ClassEntity classEntity;
+  final int subjectId;
 
-  StudentsScreen({required this.classEntity});
+  StudentsScreen({required this.classEntity,required this.subjectId});
 
   @override
   _StudentsScreenState createState() => _StudentsScreenState();
@@ -309,6 +310,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
                                   studentId:
                                   filteredStudents[index].studentId,
                                   classEntity: widget.classEntity,
+                                  subjectId: widget.subjectId,
                                 ),
                           ),
                         );

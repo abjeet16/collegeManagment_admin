@@ -17,11 +17,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   StudentDetails? studentDetails;
   bool isLoading = true;
 
-  TextEditingController firstNameController = TextEditingController();
-  TextEditingController lastNameController = TextEditingController();
-  TextEditingController emailController = TextEditingController();
-  TextEditingController phoneController = TextEditingController();
-  TextEditingController adminPasswordController = TextEditingController();
+  final firstNameController = TextEditingController();
+  final lastNameController = TextEditingController();
+  final emailController = TextEditingController();
+  final phoneController = TextEditingController();
+  final adminPasswordController = TextEditingController();
 
   @override
   void initState() {
@@ -30,21 +30,17 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   }
 
   Future<void> _fetchStudentDetails() async {
-    setState(() {
-      isLoading = true;
-    });
-
+    setState(() => isLoading = true);
     String? token = await _getToken();
     if (token != null) {
       StudentDetails? fetchedStudent = await ApiService.getStudentById(token, widget.studentId);
       setState(() {
         studentDetails = fetchedStudent;
+        isLoading = false;
       });
+    } else {
+      setState(() => isLoading = false);
     }
-
-    setState(() {
-      isLoading = false;
-    });
   }
 
   Future<String?> _getToken() async {
@@ -63,117 +59,98 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
 
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Edit Student Details"),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildTextField("First Name", firstNameController),
-                _buildTextField("Last Name", lastNameController),
-                _buildTextField("Email", emailController),
-                _buildTextField("Phone", phoneController),
-                _buildTextField("Admin Password", adminPasswordController, isPassword: true),
-              ],
-            ),
+      builder: (context) => AlertDialog(
+        title: Text("Edit Student Details"),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildTextField("First Name", firstNameController),
+              _buildTextField("Last Name", lastNameController),
+              _buildTextField("Email", emailController),
+              _buildTextField("Phone", phoneController),
+              _buildTextField("Admin Password", adminPasswordController, isPassword: true),
+            ],
           ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: Text("Cancel")),
-            ElevatedButton(
-              onPressed: () async {
-                if (adminPasswordController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Admin password is required")),
-                  );
-                  return;
-                }
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text("Cancel")),
+          ElevatedButton(
+            onPressed: () async {
+              if (adminPasswordController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Admin password is required")));
+                return;
+              }
 
-                final userDetails = UserDetailChangeReq(
-                  universityId: widget.studentId,
-                  firstName: firstNameController.text,
-                  lastName: lastNameController.text,
-                  email: emailController.text,
-                  phone: int.tryParse(phoneController.text),
-                  adminPassword: adminPasswordController.text,
-                );
+              final userDetails = UserDetailChangeReq(
+                universityId: widget.studentId,
+                firstName: firstNameController.text,
+                lastName: lastNameController.text,
+                email: emailController.text,
+                phone: int.tryParse(phoneController.text),
+                adminPassword: adminPasswordController.text,
+              );
 
-                try {
-                  Map<String, dynamic> response = await ApiService.changeUserDetails(userDetails);
-                  String message = response['message'] ?? response.toString();
-
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-
-                  _fetchStudentDetails(); // Refresh data
-                } catch (e) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("An error occurred: $e")),
-                  );
-                }
-              },
-              child: Text("Save"),
-            ),
-          ],
-        );
-      },
+              try {
+                Map<String, dynamic> response = await ApiService.changeUserDetails(userDetails);
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(response['message'] ?? "Success")));
+                _fetchStudentDetails(); // refresh
+              } catch (e) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+              }
+            },
+            child: Text("Save"),
+          ),
+        ],
+      ),
     );
   }
 
   void _showChangePasswordDialog() {
-    TextEditingController newPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
     adminPasswordController.clear();
 
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Change Student Password"),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildTextField("New Password", newPasswordController, isPassword: true),
-                _buildTextField("Admin Password", adminPasswordController, isPassword: true),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: Text("Cancel")),
-            ElevatedButton(
-              onPressed: () async {
-                if (adminPasswordController.text.isEmpty || newPasswordController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Both fields are required")),
-                  );
-                  return;
-                }
-
-                final userDetails = UserDetailChangeReq(
-                  universityId: widget.studentId,
-                  adminPassword: adminPasswordController.text,
-                  password: newPasswordController.text,
-                );
-
-                try {
-                  Map<String, dynamic> response = await ApiService.changeUserDetails(userDetails);
-                  String message = response['message'] ?? response.toString();
-
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-                } catch (e) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("An error occurred: $e")),
-                  );
-                }
-              },
-              child: Text("Change"),
-            ),
+      builder: (context) => AlertDialog(
+        title: Text("Change Password"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildTextField("New Password", newPasswordController, isPassword: true),
+            _buildTextField("Admin Password", adminPasswordController, isPassword: true),
           ],
-        );
-      },
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text("Cancel")),
+          ElevatedButton(
+            onPressed: () async {
+              if (newPasswordController.text.isEmpty || adminPasswordController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("All fields are required")));
+                return;
+              }
+
+              final userDetails = UserDetailChangeReq(
+                universityId: widget.studentId,
+                password: newPasswordController.text,
+                adminPassword: adminPasswordController.text,
+              );
+
+              try {
+                Map<String, dynamic> response = await ApiService.changeUserDetails(userDetails);
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(response['message'] ?? "Success")));
+              } catch (e) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+              }
+            },
+            child: Text("Change"),
+          ),
+        ],
+      ),
     );
   }
 
@@ -183,7 +160,20 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       child: TextField(
         controller: controller,
         obscureText: isPassword,
-        decoration: InputDecoration(labelText: label, border: OutlineInputBorder()),
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoTile({required IconData icon, required String title, required String value}) {
+    return Card(
+      child: ListTile(
+        leading: Icon(icon, color: Colors.blue),
+        title: Text(title),
+        subtitle: Text(value, style: TextStyle(fontSize: 16)),
       ),
     );
   }
@@ -194,48 +184,52 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       appBar: AppBar(
         title: Text("Student Profile"),
         actions: [
-          IconButton(
-            icon: Icon(Icons.edit),
-            onPressed: _showEditDialog,
-            tooltip: "Edit Profile",
-          ),
-          IconButton(
-            icon: Icon(Icons.lock_reset),
-            onPressed: _showChangePasswordDialog,
-            tooltip: "Change Password",
-          ),
+          IconButton(icon: Icon(Icons.edit), onPressed: _showEditDialog),
+          IconButton(icon: Icon(Icons.lock), onPressed: _showChangePasswordDialog),
         ],
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : studentDetails == null
           ? Center(child: Text("Failed to load student details"))
-          : Padding(
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("University Id: ${widget.studentId}",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            Text("Name: ${studentDetails!.firstName} ${studentDetails!.lastName}",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.normal)),
-            SizedBox(height: 8),
-            Text("Email: ${studentDetails!.email}",
-                style: TextStyle(fontSize: 16, color: Colors.grey[600])),
-            SizedBox(height: 8),
-            Text("Phone: ${studentDetails!.phone}",
-                style: TextStyle(fontSize: 16, color: Colors.grey[600])),
-            SizedBox(height: 8),
-            Text("Section: ${studentDetails!.section}",
-                style: TextStyle(fontSize: 16, color: Colors.grey[600])),
-            SizedBox(height: 8),
-            Text("Course: ${studentDetails!.courseName}",
-                style: TextStyle(fontSize: 16, color: Colors.grey[600])),
+            _buildInfoTile(
+              icon: Icons.account_box,
+              title: "University ID",
+              value: widget.studentId,
+            ),
+            _buildInfoTile(
+              icon: Icons.person,
+              title: "Name",
+              value: "${studentDetails!.firstName} ${studentDetails!.lastName}",
+            ),
+            _buildInfoTile(
+              icon: Icons.email,
+              title: "Email",
+              value: studentDetails!.email,
+            ),
+            _buildInfoTile(
+              icon: Icons.phone,
+              title: "Phone",
+              value: studentDetails!.phone.toString(),
+            ),
+            _buildInfoTile(
+              icon: Icons.class_,
+              title: "Section",
+              value: studentDetails!.section,
+            ),
+            _buildInfoTile(
+              icon: Icons.school,
+              title: "Course",
+              value: studentDetails!.courseName,
+            ),
           ],
         ),
       ),
     );
   }
 }
-
 

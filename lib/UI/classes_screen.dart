@@ -4,7 +4,7 @@ import '../helper/api_service.dart';
 import '../modules/course.dart';
 import '../modules/class_entity.dart';
 import 'AssignSubjectsScreen.dart';
-import 'students_screen.dart';
+import 'StudentSubjectsScreen.dart';
 
 class ClassesScreen extends StatefulWidget {
   final Course course;
@@ -54,7 +54,7 @@ class _ClassesScreenState extends State<ClassesScreen> {
 
   Future<String?> _getToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString("auth_token");  // Ensure token is string or null
+    return prefs.getString("auth_token");
   }
 
   void _showAddClassDialog() {
@@ -217,7 +217,7 @@ class _ClassesScreenState extends State<ClassesScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => StudentsScreen(
+                      builder: (context) => StudentSubjectsScreen(
                         classEntity: classEntity,
                       ),
                     ),
@@ -288,6 +288,7 @@ class ClassCard extends StatelessWidget {
     );
   }
 }
+
 
 
 
