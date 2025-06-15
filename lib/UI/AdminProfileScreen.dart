@@ -43,9 +43,11 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
       context: context,
       builder: (_) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Text("Change Admin Details"),
           content: SingleChildScrollView(
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 _textField("First Name", _firstName),
                 _textField("Last Name", _lastName),
@@ -99,9 +101,11 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
       context: context,
       builder: (_) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Text("Change Password"),
           content: SingleChildScrollView(
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 _passwordField("New Password", _newPassword, obscureNew, () {
                   setState(() => obscureNew = !obscureNew);
@@ -148,6 +152,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(response.containsKey('statusCode') ? "Error" : "Success"),
         content: Text(response['message'] ?? "No response"),
         actions: [
@@ -164,6 +169,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text("Validation Error"),
         content: Text(message),
         actions: [
@@ -180,7 +186,10 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
       child: TextField(
         controller: controller,
         keyboardType: type,
-        decoration: InputDecoration(labelText: label),
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        ),
       ),
     );
   }
@@ -194,6 +203,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
         obscureText: obscure,
         decoration: InputDecoration(
           labelText: label,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           suffixIcon: IconButton(
             icon: Icon(obscure ? Icons.visibility_off : Icons.visibility),
             onPressed: toggle,
@@ -203,15 +213,12 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     );
   }
 
-  Widget _infoItem(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Text("$label: ", style: TextStyle(fontWeight: FontWeight.bold)),
-          Expanded(child: Text(value)),
-        ],
-      ),
+  Widget _infoTile(IconData icon, String label, String value) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon, color: Colors.blue),
+      title: Text(label, style: TextStyle(fontWeight: FontWeight.bold)),
+      subtitle: Text(value),
     );
   }
 
@@ -237,23 +244,39 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
           ? Center(child: CircularProgressIndicator())
           : adminDetails == null
           ? Center(child: Text("Failed to load admin details"))
-          : Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _infoItem("Admin ID", adminDetails!.adminId),
-            _infoItem("First Name", adminDetails!.firstName),
-            _infoItem("Last Name", adminDetails!.lastName),
-            _infoItem("Email", adminDetails!.email),
-            _infoItem("Phone", adminDetails!.phone),
-          ],
+          : SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 4,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: CircleAvatar(
+                    radius: 40,
+                    backgroundColor: Colors.blue.shade100,
+                    child: Icon(Icons.admin_panel_settings, size: 40, color: Colors.blue),
+                  ),
+                ),
+                SizedBox(height: 20),
+                _infoTile(Icons.person, "Admin ID", adminDetails!.adminId),
+                _infoTile(Icons.badge, "First Name", adminDetails!.firstName),
+                _infoTile(Icons.badge_outlined, "Last Name", adminDetails!.lastName),
+                _infoTile(Icons.email, "Email", adminDetails!.email),
+                _infoTile(Icons.phone, "Phone", adminDetails!.phone),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 }
-
 
 
 

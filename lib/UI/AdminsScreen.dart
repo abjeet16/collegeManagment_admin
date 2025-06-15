@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../helper/api_service.dart';
 import '../modules/AddAdminRequest.dart';
 import '../modules/student.dart';
@@ -30,10 +29,7 @@ class _AdminsScreenState extends State<AdminsScreen> {
   }
 
   Future<void> fetchAdmins() async {
-    setState(() {
-      isLoading = true;
-    });
-
+    setState(() => isLoading = true);
     final result = await ApiService.getAdmins();
     setState(() {
       if (result.isNotEmpty && result[0] is Student) {
@@ -57,38 +53,12 @@ class _AdminsScreenState extends State<AdminsScreen> {
               key: _formKey,
               child: Column(
                 children: [
-                  TextFormField(
-                    controller: _userNameController,
-                    decoration: InputDecoration(labelText: "Username"),
-                    validator: (value) => value!.isEmpty ? "Enter username" : null,
-                  ),
-                  TextFormField(
-                    controller: _firstNameController,
-                    decoration: InputDecoration(labelText: "First Name"),
-                    validator: (value) => value!.isEmpty ? "Enter first name" : null,
-                  ),
-                  TextFormField(
-                    controller: _lastNameController,
-                    decoration: InputDecoration(labelText: "Last Name"),
-                    validator: (value) => value!.isEmpty ? "Enter last name" : null,
-                  ),
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: InputDecoration(labelText: "Email"),
-                    validator: (value) => value!.isEmpty ? "Enter email" : null,
-                  ),
-                  TextFormField(
-                    controller: _passwordController,
-                    decoration: InputDecoration(labelText: "Password"),
-                    obscureText: true,
-                    validator: (value) => value!.length < 6 ? "Min 6 characters" : null,
-                  ),
-                  TextFormField(
-                    controller: _phoneController,
-                    decoration: InputDecoration(labelText: "Phone"),
-                    keyboardType: TextInputType.phone,
-                    validator: (value) => value!.isEmpty ? "Enter phone number" : null,
-                  ),
+                  _buildInput(_userNameController, "Username"),
+                  _buildInput(_firstNameController, "First Name"),
+                  _buildInput(_lastNameController, "Last Name"),
+                  _buildInput(_emailController, "Email", inputType: TextInputType.emailAddress),
+                  _buildInput(_passwordController, "Password", obscure: true),
+                  _buildInput(_phoneController, "Phone", inputType: TextInputType.phone),
                 ],
               ),
             ),
@@ -115,44 +85,45 @@ class _AdminsScreenState extends State<AdminsScreen> {
 
                   final response = await ApiService.addAdmin(newAdmin);
 
-                  if (response.containsKey('message')) {
-                    clearFields();
-                    await fetchAdmins();
+                  clearFields();
+                  await fetchAdmins();
 
-                    showDialog(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        title: Text("Success"),
-                        content: Text(response['message']),
-                        actions: [
-                          TextButton(
-                            child: Text("OK"),
-                            onPressed: () => Navigator.of(context).pop(),
-                          ),
-                        ],
-                      ),
-                    );
-                  } else {
-                    showDialog(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        title: Text("Error"),
-                        content: Text(response['error'] ?? "Something went wrong"),
-                        actions: [
-                          TextButton(
-                            child: Text("OK"),
-                            onPressed: () => Navigator.of(context).pop(),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
+                  showDialog(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: Text(response.containsKey('message') ? "Success" : "Error"),
+                      content: Text(response['message'] ?? response['error'] ?? "Something went wrong"),
+                      actions: [
+                        TextButton(
+                          child: Text("OK"),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ],
+                    ),
+                  );
                 }
               },
             ),
           ],
         );
       },
+    );
+  }
+
+  Widget _buildInput(TextEditingController controller, String label,
+      {bool obscure = false, TextInputType inputType = TextInputType.text}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      child: TextFormField(
+        controller: controller,
+        obscureText: obscure,
+        keyboardType: inputType,
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+        ),
+        validator: (value) => value == null || value.isEmpty ? 'Enter $label' : null,
+      ),
     );
   }
 
@@ -168,26 +139,48 @@ class _AdminsScreenState extends State<AdminsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Admins")),
+      appBar: AppBar(
+        title: Text("Admins"),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: fetchAdmins,
+            tooltip: "Refresh",
+          ),
+        ],
+      ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : error != null
           ? Center(child: Text("Error: $error"))
           : ListView.builder(
+        padding: EdgeInsets.all(12),
         itemCount: admins.length,
         itemBuilder: (context, index) {
           final admin = admins[index];
-          return ListTile(
-            title: Text(admin.studentName),
-            subtitle: Text("ID: ${admin.studentId}"),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => AdminProfileScreen(adminId: admin.studentId),
-                ),
-              );
-            },
+          return Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            elevation: 3,
+            margin: EdgeInsets.symmetric(vertical: 8),
+            child: ListTile(
+              contentPadding: EdgeInsets.all(16),
+              title: Text(
+                admin.studentName,
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text("ID: ${admin.studentId}"),
+              trailing: Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => AdminProfileScreen(adminId: admin.studentId),
+                  ),
+                );
+              },
+            ),
           );
         },
       ),
@@ -199,6 +192,4 @@ class _AdminsScreenState extends State<AdminsScreen> {
     );
   }
 }
-
-
 

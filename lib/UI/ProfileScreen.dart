@@ -86,11 +86,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 try {
                   Map<String, dynamic> response =
                   await ApiService.changeUserDetails(userDetails);
-                  print("API Response: $response");
 
                   Navigator.pop(context); // Close dialog
 
-                  // Show actual response message
                   String message = response['message'] ?? response.toString();
 
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -114,8 +112,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _editProfile() {
-    TextEditingController firstNameController = TextEditingController(text: firstName);
-    TextEditingController lastNameController = TextEditingController(text: lastName);
+    TextEditingController firstNameController =
+    TextEditingController(text: firstName);
+    TextEditingController lastNameController =
+    TextEditingController(text: lastName);
     TextEditingController emailController = TextEditingController(text: email);
     TextEditingController phoneController = TextEditingController(text: phone);
 
@@ -136,7 +136,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: Text("Cancel")),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel"),
+            ),
             ElevatedButton(
               onPressed: () {
                 setState(() {
@@ -161,67 +164,78 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: const EdgeInsets.symmetric(vertical: 5.0),
       child: TextField(
         controller: controller,
-        decoration: InputDecoration(labelText: label, border: OutlineInputBorder()),
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(),
+        ),
       ),
     );
   }
 
-  Widget _buildProfileRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 10.0),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: RichText(
-          text: TextSpan(
-            text: "$label: ",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
-            children: [
-              TextSpan(
-                text: value,
-                style: TextStyle(fontWeight: FontWeight.normal),
-              ),
-            ],
-          ),
-        ),
-      ),
+  Widget _infoTile(IconData icon, String label, String value) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.blue),
+      title: Text(label, style: TextStyle(fontWeight: FontWeight.bold)),
+      subtitle: Text(value),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              radius: 50,
-              backgroundColor: Colors.grey[300],
-              child: Icon(Icons.person, size: 50, color: Colors.white),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("User Profile"),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.edit),
+            tooltip: 'Edit Profile',
+            onPressed: _editProfile,
+          ),
+        ],
+      ),
+      body: Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Card(
+            elevation: 5,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundColor: Colors.blue.shade100,
+                    child: Icon(Icons.person, size: 40, color: Colors.blue),
+                  ),
+                  SizedBox(height: 20),
+                  _infoTile(Icons.perm_identity, "ID", universityId),
+                  _infoTile(Icons.badge, "First Name", firstName),
+                  _infoTile(Icons.badge_outlined, "Last Name", lastName),
+                  _infoTile(Icons.email, "Email", email),
+                  _infoTile(Icons.phone, "Phone", phone),
+                  SizedBox(height: 20),
+                  ElevatedButton.icon(
+                    onPressed: _editProfile,
+                    icon: Icon(Icons.edit, color: Colors.white),
+                    label: Text("Edit Profile", style: TextStyle(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            SizedBox(height: 20),
-            _buildProfileRow("First Name", firstName),
-            _buildProfileRow("Last Name", lastName),
-            _buildProfileRow("Email", email),
-            _buildProfileRow("Phone", phone),
-            SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: _editProfile,
-              icon: Icon(Icons.edit),
-              label: Text("Edit Profile"),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 }
-
-
-
-
-
 
 
 

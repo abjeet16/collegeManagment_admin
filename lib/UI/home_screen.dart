@@ -107,8 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-    ) ??
-        false;
+    ) ?? false;
 
     if (!confirmed) return;
 
@@ -154,8 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-    ) ??
-        false;
+    ) ?? false;
 
     if (!confirmed) return;
 
@@ -231,81 +229,99 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      body: IndexedStack(
-        index: _selectedIndex,
+      body: Stack(
         children: [
-          // Home Screen
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => UsersScreen()),
-                    );
-                  },
-                  child: Text("Users"),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: Size(150, 50),
-                  ),
-                ),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CoursesScreen(
-                          fromAssignTeacher: false,
-                          teacherId: null,
-                        ),
-                      ),
-                    );
-                  },
-                  child: Text("Courses"),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: Size(150, 50),
-                  ),
-                ),
-              ],
+          // Background Logo
+          Opacity(
+            opacity: 0.2, // you can adjust this
+            child: Center(
+              child: Image.asset(
+                'assets/images/nieLogo.png',
+                width: 400, // adjust size as needed
+                height: 500,
+                fit: BoxFit.contain,
+              ),
             ),
           ),
-
-          // Profile Screen
-          ProfileScreen(),
-
-          // Settings Screen
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: _promoteAllStudents,
-                  child: Text("Promote All Students"),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: Size(200, 50),
-                    backgroundColor: Colors.green,
-                  ),
+          // Main Content
+          IndexedStack(
+            index: _selectedIndex,
+            children: [
+              // Home Screen
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => UsersScreen()),
+                        );
+                      },
+                      child: Text("Users"),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(150, 50),
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CoursesScreen(
+                              fromAssignTeacher: false,
+                              teacherId: null,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Text("Courses"),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(150, 50),
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _demoteAllStudents,
-                  child: Text("Demote All Students"),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: Size(200, 50),
-                    backgroundColor: Colors.red,
-                  ),
+              ),
+
+              // Profile Screen
+              ProfileScreen(),
+
+              // Settings Screen
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: _promoteAllStudents,
+                      child: Text("Promote All Students"),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(200, 50),
+                        backgroundColor: Colors.green,
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: _demoteAllStudents,
+                      child: Text("Demote All Students"),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(200, 50),
+                        backgroundColor: Colors.red,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 }
+
 
 
 
